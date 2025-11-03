@@ -10,7 +10,7 @@ class PostController extends Controller
 {
     public function index()
     {
-        $posts = Post::with(['user','comments.user'])
+        $posts = Post::with(['user', 'comments.user'])
             ->latest()->get();
         return view('posts.index', compact('posts'));
     }
@@ -28,11 +28,17 @@ class PostController extends Controller
             'content' => $validated['content']
         ]);
 
-        return back()->with('success', 'Post created successfully!'); 
+        return back()->with('success', 'Post created successfully!');
     }
 
-    public function history() {
-        return view('posts.history');
+    public function history()
+    {
+        $posts = Post::with(['user', 'comments'])
+            ->where('user_id', Auth::id())
+            ->latest()
+            ->get();
+
+        return view('posts.history', compact('posts'));
     }
 
     public function show($id)
