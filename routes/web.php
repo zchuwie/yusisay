@@ -2,15 +2,23 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PostController;
+use App\Http\Controllers\Admin\AdminController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('auth.login');
 });
 
+Route::get('/admin', function () {
+    return view('admin');
+})->name('admin');
+
 Route::get('/dashboard', function () {
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
+
+Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
+
 
 
 Route::middleware('auth')->group(function () {
