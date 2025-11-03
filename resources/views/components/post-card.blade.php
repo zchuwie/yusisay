@@ -1,7 +1,7 @@
 <div class="relative group">
     <a href="{{ route('posts.show', $postId) }}" class="absolute inset-0 z-10"></a>
     <div
-        class="bg-[#fafafa] border border-[#dddddd] p-[30px] px-[37px] w-[700px] shadow rounded-2xl flex flex-col items-center justify-center mb-5 font-sans">
+        class="bg-[#fafafa] border border-[#dddddd] p-[30px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-5 font-sans">
         <div class="flex flex-col justify-center gap-6 w-full">
 
             <!-- Post details (who + time + comments) -->
