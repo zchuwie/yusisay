@@ -3,17 +3,14 @@
     <div
         class="bg-[#fafafa] border border-[#dddddd] p-[30px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-5 font-sans">
         <div class="flex flex-col justify-center gap-6 w-full">
-
-            <!-- Post details (who + time + comments) -->
+ 
             <div class="flex justify-between items-center w-full">
-
-                <!-- who & time -->
+ 
                 <div class="flex items-center gap-2.5 w-full">
                     <div class="text-[16px] font-bold text-[#454545]">{{ $username }}</div>
                     <div class="mt-1 text-[12px] text-[#8d8d8d]">{{ $time }}</div>
                 </div>
-
-                <!-- comment + dot menu -->
+ 
                 <div class="flex justify-end items-center gap-1.5 w-full self-center">
                     <div class="flex justify-center items-center">
                         <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22"
@@ -40,8 +37,7 @@
                     </div>
                 </div>
             </div>
-
-            <!-- post text -->
+ 
             <div class="mb-2.5 flex justify-start items-start text-[16px] text-[#454545] leading-[30px]">
                 {{ $content }}
             </div>

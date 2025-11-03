@@ -49,8 +49,7 @@
     @endif
 
     <div class="relative group">
-        <div class="flex flex-col items-center justify-center gap-[10px]">
-            <!-- POST BLOCK -->
+        <div class="flex flex-col items-center justify-center gap-[10px]"> 
             <div x-data="{
                 expanded: true,
                 showButton: false,
@@ -106,8 +105,7 @@
                     <span x-text="expanded ? 'Minimize' : 'Expand'"></span>
                 </button>
             </div>
-
-            <!-- COMMENT BLOCK -->
+ 
             <div
                 class="bg-[#fafafa] border border-[#dddddd] pt-5 pb-[30px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-5 font-sans">
 
@@ -136,8 +134,7 @@
                         </div>
                     @endforelse
                 </div>
-
-                <!-- Comment Form -->
+ 
                 <form action="{{ route('comments.store') }}" method="POST" x-data="{ content: '', isAnonymous: false }" 
                     @submit.prevent="if (content.trim().length < 1) { alert('Comment must have at least 1 character!'); } else { $el.submit(); }"
                     class="w-full h-[140px] rounded-[16px] bg-[#ededed] px-[16px] pt-[16px] mt-[16px] flex flex-col">

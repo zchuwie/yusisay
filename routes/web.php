@@ -29,10 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/posts', [PostController::class, 'store'])->name('posts.store');
     Route::get('/history', [PostController::class, 'history'])->name('posts.history');
 
-    // Comments route BEFORE the posts show route
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
-
-    // This should be LAST among post routes
     Route::get('/posts/{id}', [PostController::class, 'show'])->name('posts.show');
 });
 
