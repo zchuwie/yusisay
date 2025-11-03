@@ -10,19 +10,19 @@ class CommentController extends Controller
 {
     public function store(Request $request)
     {
-        $validated = $request->validate([
+        $request->validate([
             'post_id' => 'required|exists:posts,id',
-            'content' => 'required|string|max:300',
+            'content' => 'required|min:1|max:1000',
             'is_anonymous' => 'boolean'
         ]);
 
         Comment::create([
-            'post_id' => $validated['post_id'],
+            'post_id' => $request->input('post_id'),
             'user_id' => Auth::id(),
-            'is_anonymous' => $request->boolean('is_anonymous'),
-            'content' => $validated['content']
+            'content' => $request->input('content'),
+            'is_anonymous' => $request->input('is_anonymous', false),
         ]);
 
-        return back();
+        return redirect()->back()->with('success', 'Comment posted successfully!');
     }
 }
