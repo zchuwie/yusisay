@@ -28,7 +28,7 @@ class PostController extends Controller
             'content' => $validated['content']
         ]);
 
-        return back();
+        return back()->with('success', 'Post created successfully!'); 
     }
 
     public function history() {

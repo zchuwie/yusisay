@@ -1,15 +1,12 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Home Feed') }}
-        </h2>
-    </x-slot>
 
-    <a href="{{ route('posts.show', 1) }}">
-    <div class="p-4 border rounded-lg shadow hover:bg-gray-50 transition">
-        <h2 class="text-lg font-semibold">Test Post</h2>
-        <p class="text-gray-700">Click me to test routing to Post #1</p>
+    @foreach ($posts as $post)
+        <x-post-card :username="$post->is_anonymous ? 'Anonymous' : $post->user->name" :time="$post->created_at->diffForHumans()" :content="$post->content" :commentsCount="$post->comments->count()" :postId="$post->id" />
+    @endforeach
+
+    <div x-data="{ open: false }">
+        <x-add-post-button @click="open = true" />
+        <x-add-post-modal />
     </div>
-    </a>
 
 </x-app-layout>
