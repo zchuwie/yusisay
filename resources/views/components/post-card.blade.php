@@ -26,7 +26,7 @@
                     <div class="text-[#454545] self-center text-[12px] mt-1">{{ $commentsCount }}</div>
 
                     <!-- Three dots menu with dropdown -->
-                    <div class="ml-5 mt-[1px] self-center relative z-20" x-data="{ open: false }">
+                    <div class="ml-5 mt-[1px] self-center relative z-20" x-data="{ open: false, showReasonModal: false, reason: '' }">
                         <button @click="open = !open" class="cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="4" height="18" viewBox="0 0 4 18"
                                 fill="none">
@@ -45,7 +45,7 @@
                         <!-- Dropdown menu -->
                         <div x-show="open" @click.outside="open = false" x-transition
                             class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
-                            <button @click="open = false; alert('Report submitted')"
+                            <button @click="open = false; showReasonModal = true"
                                 class="w-full text-left px-4 py-2 text-sm text-[#454545] hover:bg-gray-100 flex items-center gap-2">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
                                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -54,6 +54,34 @@
                                 </svg>
                                 Report
                             </button>
+                        </div>
+
+                        <!-- Report Reason Modal -->
+                        <div x-show="showReasonModal" @click.self="showReasonModal = false" x-transition
+                            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+                            <div class="p-8 bg-[#fafafa] rounded-[16px] w-[400px] flex flex-col gap-[20px]">
+                                <h3 class="text-[20px] font-bold text-[#454545]">Report Post</h3>
+
+                                <form action="{{ route('reports.store') }}" method="POST">
+                                    @csrf
+                                    <input type="hidden" name="post_id" value="{{ $postId }}">
+
+                                    <textarea name="reason" x-model="reason" rows="4"
+                                        class="block p-2.5 w-full text-sm text-[#454545] bg-white rounded-lg border border-[#dddddd] focus:ring-[#e4800d] focus:border-[#e4800d] mb-4"
+                                        placeholder="Why are you reporting this post? (Optional)"></textarea>
+
+                                    <div class="flex justify-end gap-3">
+                                        <button type="button" @click="showReasonModal = false; reason = ''"
+                                            class="px-4 py-2 text-sm text-[#454545] bg-gray-200 rounded-lg hover:bg-gray-300">
+                                            Cancel
+                                        </button>
+                                        <button type="submit"
+                                            class="px-4 py-2 text-sm text-white bg-[#FF9013] rounded-lg hover:bg-[#d77506]">
+                                            Submit Report
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

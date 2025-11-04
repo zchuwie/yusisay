@@ -3,9 +3,10 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\PostController;
 use App\Http\Controllers\CommentController;
+use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\AdminController;
-use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Route; 
 
 Route::get('/', function () {
     return view('auth.login');
@@ -38,6 +39,8 @@ Route::middleware('auth')->group(function () {
 
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::get('/posts/{id}', [PostController::class, 'show'])->name('posts.show');
+
+    Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');  
 });
 
 require __DIR__ . '/auth.php';

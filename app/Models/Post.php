@@ -12,6 +12,7 @@ class Post extends Model
         'user_id',
         'is_anonymous',
         'content',
+        'is_hidden',
     ];
 
     public function user()
