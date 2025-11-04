@@ -15,6 +15,8 @@
 
             <div class="space-x-4">
                 <a href="{{ route('admin.dashboard') }}" class="hover:text-gray-300">Dashboard</a>
+                <a href="{{ route('admin.report') }}" class="hover:text-gray-300">Reports</a>
+                <a href="{{ route('admin.user') }}" class="hover:text-gray-300">Users</a>
                 <form method="POST" action="{{ route('logout') }}" class="inline">
                     @csrf
                     <button type="submit" class="hover:text-gray-300">Logout</button>
