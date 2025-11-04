@@ -42,14 +42,14 @@
         </p>
     </nav>
 
-    @if(session('success'))
+    @if (session('success'))
         <div class="max-w-[700px] mx-auto mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
             {{ session('success') }}
         </div>
     @endif
 
     <div class="relative group">
-        <div class="flex flex-col items-center justify-center gap-[10px]"> 
+        <div class="flex flex-col items-center justify-center gap-[10px]">
             <div x-data="{
                 expanded: true,
                 showButton: false,
@@ -66,6 +66,9 @@
                 <div class="w-full flex flex-col justify-center gap-[10px]">
                     <div class="flex justify-between items-center w-full">
                         <div class="flex justify-start items-center gap-[10px] w-full">
+                            <div class="w-7 h-7 rounded-full overflow-hidden">
+                                <img src="your-image-url.jpg" class="w-full h-full object-cover" alt="Profile Picture">
+                            </div>
                             <div class="text-[16px] text-[#454545] font-bold">
                                 {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}
                             </div>
@@ -105,17 +108,21 @@
                     <span x-text="expanded ? 'Minimize' : 'Expand'"></span>
                 </button>
             </div>
- 
+
             <div
                 class="bg-[#fafafa] border border-[#dddddd] pt-5 pb-[30px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-5 font-sans">
 
                 <div
                     class="overflow-x-hidden overflow-y-auto max-h-[240px] scrollbar-thin scrollbar-thumb-[#c0c0c0] scrollbar-track-[#f0f0f0] scrollbar-thumb-rounded-[4px] w-full">
-                    
+
                     @forelse($post->comments as $comment)
                         <div class="w-full flex flex-col justify-center gap-[5px] mb-[20px] mt-[20px]">
                             <div class="flex justify-between items-center w-full">
                                 <div class="flex justify-start items-center gap-[10px] w-full">
+                                    <div class="w-7 h-7 rounded-full overflow-hidden">
+                                        <img src="your-image-url.jpg" class="w-full h-full object-cover"
+                                            alt="Profile Picture">
+                                    </div>
                                     <div class="text-[16px] text-[#454545] font-bold">
                                         {{ $comment->is_anonymous ? 'Anonymous' : $comment->user->name }}
                                     </div>
@@ -124,7 +131,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="mb-[10px] flex justify-start items-start text-[16px] text-[#454545] leading-[30px]">
+                            <div
+                                class="mb-[10px] flex justify-start items-start text-[16px] text-[#454545] leading-[30px]">
                                 {{ $comment->content }}
                             </div>
                         </div>
@@ -134,17 +142,15 @@
                         </div>
                     @endforelse
                 </div>
- 
-                <form action="{{ route('comments.store') }}" method="POST" x-data="{ content: '', isAnonymous: false }" 
+
+                <form action="{{ route('comments.store') }}" method="POST" x-data="{ content: '', isAnonymous: false }"
                     @submit.prevent="if (content.trim().length < 1) { alert('Comment must have at least 1 character!'); } else { $el.submit(); }"
                     class="w-full h-[140px] rounded-[16px] bg-[#ededed] px-[16px] pt-[16px] mt-[16px] flex flex-col">
                     @csrf
-                    
+
                     <input type="hidden" name="post_id" value="{{ $post->id }}">
-                    
-                    <textarea
-                        name="content"
-                        x-model="content"
+
+                    <textarea name="content" x-model="content"
                         class="mb-[5px] bg-transparent border-none outline-none resize-none w-full text-[16px] text-[#454545] h-full font-sans overflow-y-auto scrollbar-thin scrollbar-thumb-[#c0c0c0] scrollbar-track-[#f0f0f0] scrollbar-thumb-rounded-[4px] focus:outline-none focus:ring-0 focus:border-transparent"
                         placeholder="What's your comment?"></textarea>
 
@@ -154,21 +160,22 @@
 
                     <div class="h-[40px] flex flex-row justify-between items-center pr-[10px] mt-[2px] mb-[10px] pb-2">
                         <label class="pb-[2px] cursor-pointer flex items-center">
-                            <input type="checkbox" name="is_anonymous" value="1" x-model="isAnonymous" class="sr-only peer">
+                            <input type="checkbox" name="is_anonymous" value="1" x-model="isAnonymous"
+                                class="sr-only peer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="22" height="20" viewBox="0 0 22 20"
-                                :class="isAnonymous ? 'stroke-[#FF9013]' : 'stroke-[#6A6A6A]'"
-                                fill="none">
+                                :class="isAnonymous ? 'stroke-[#FF9013]' : 'stroke-[#6A6A6A]'" fill="none">
                                 <path
                                     d="M13 16.0007C13 15.4702 12.7893 14.9615 12.4142 14.5864C12.0391 14.2114 11.5304 14.0007 11 14.0007C10.4696 14.0007 9.96086 14.2114 9.58579 14.5864C9.21071 14.9615 9 15.4702 9 16.0007M13 16.0007C13 17.6575 14.3431 19.0007 16 19.0007C17.6569 19.0007 19 17.6575 19 16.0007C19 14.3438 17.6569 13.0007 16 13.0007C14.3431 13.0007 13 14.3438 13 16.0007ZM9 16.0007C9 17.6575 7.65685 19.0007 6 19.0007C4.34315 19.0007 3 17.6575 3 16.0007C3 14.3438 4.34315 13.0007 6 13.0007C7.65685 13.0007 9 14.3438 9 16.0007ZM18 9.00066L15.89 2.34366C15.7976 2.0778 15.6502 1.83443 15.4573 1.62945C15.2645 1.42448 15.0305 1.26252 14.7708 1.15416C14.511 1.04581 14.2313 0.993495 13.9499 1.00065C13.6686 1.0078 13.3919 1.07425 13.138 1.19566L11.862 1.80566C11.5928 1.93413 11.2983 2.00075 11 2.00066H7.5C7.06434 2.00057 6.64057 2.14274 6.29311 2.40555C5.94565 2.66835 5.6935 3.03743 5.575 3.45666L4 9.00066M1 9.00066H21"
                                     stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </label>
                         <button type="submit" class="cursor-pointer">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 22 22"
-                                fill="none">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22"
+                                viewBox="0 0 22 22" fill="none">
                                 <path
                                     d="M9.91337 12.0877C9.72226 11.897 9.49449 11.7469 9.24381 11.6465L1.31381 8.4665C1.21912 8.42851 1.13833 8.36246 1.08226 8.27722C1.0262 8.19199 0.997552 8.09164 1.00016 7.98966C1.00278 7.88767 1.03652 7.78892 1.09688 7.70667C1.15723 7.62442 1.2413 7.56259 1.33781 7.5295L20.3378 1.0295C20.4264 0.997494 20.5223 0.991386 20.6143 1.01189C20.7062 1.03239 20.7904 1.07866 20.857 1.14528C20.9236 1.21189 20.9699 1.2961 20.9904 1.38805C21.0109 1.48 21.0048 1.57589 20.9728 1.6645L14.4728 20.6645C14.4397 20.761 14.3779 20.8451 14.2956 20.9054C14.2134 20.9658 14.1146 20.9995 14.0126 21.0021C13.9107 21.0048 13.8103 20.9761 13.7251 20.92C13.6398 20.864 13.5738 20.7832 13.5358 20.6885L10.3558 12.7565C10.255 12.506 10.1045 12.2785 9.91337 12.0877ZM9.91337 12.0877L20.8538 1.1495"
-                                    stroke="#6A6A6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+                                    stroke="#6A6A6A" stroke-width="2" stroke-linecap="round"
+                                    stroke-linejoin="round" />
                             </svg>
                         </button>
                     </div>
