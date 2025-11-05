@@ -11,7 +11,7 @@
         </div>
     @else
         <div class="w-[calc(100vw-16rem)] h-[calc(100vh-7rem)] bg-gray-50 flex">
-
+            <!-- Left Chat List -->
             <div class="w-1/4 border-r bg-white flex flex-col">
                 <div class="p-4 border-b">
                     <h2 class="text-lg font-bold text-gray-700">Chats</h2>
@@ -19,6 +19,7 @@
                         class="w-full mt-2 border rounded p-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-400">
                 </div>
 
+                <!-- Conversation List -->
                 <div class="flex-1 overflow-y-auto p-2" id="conversationListContainer">
                     <ul id="conversationList">
                         @foreach ($conversations as $conv)
@@ -79,6 +80,58 @@
             window.Laravel = {
                 userId: {{ auth()->id() }}
             };
+
+
+            const searchInput = document.getElementById('search');
+            const conversationList = document.getElementById('conversationList');
+
+            searchInput.addEventListener('input', async (e) => {
+                const query = e.target.value.trim();
+
+                if (query.length === 0) {
+                    location.reload(); searchInput
+                }
+
+
+                if (query.length < 2) return;  
+
+                try {
+                    const response = await fetch(`/search-users?query=${encodeURIComponent(query)}`);
+                    const users = await response.json();
+
+                    conversationList.innerHTML = ''; 
+
+                    if (users.length === 0) {
+                        conversationList.innerHTML = '<p class="text-sm text-gray-500 px-2">No users found.</p>';
+                        return;
+                    }
+
+                    users.forEach(user => {
+                        const li = document.createElement('li');
+                        li.className =
+                            'cursor-pointer py-2 px-3 hover:bg-green-50 rounded mb-1 border-b flex items-center justify-between';
+                        li.dataset.id = user.id;
+                        li.dataset.name = user.name;
+
+                        const profile = user.profile_picture ?
+                            `<img src="/assets/${user.profile_picture}" class="w-full h-full object-cover" alt="${user.name}">` :
+                            `<span class="text-sm font-semibold text-gray-700">${user.name.charAt(0).toUpperCase()}</span>`;
+
+                        li.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <div class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gray-200">
+                                    ${profile}
+                                </div>
+                                <span class="text-gray-700 font-medium">${user.name}</span>
+                            </div>
+                        `;
+
+                        conversationList.appendChild(li);
+                    });
+                } catch (err) {
+                    console.error('Search failed:', err);
+                }
+            });
         </script>
     @endif
 </x-app-layout>
