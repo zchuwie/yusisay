@@ -6,8 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{{ __('Post #' . $post->id) }}</title>
+
+    {{-- Font --}}
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+
+    {{-- Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+
     <style>
+        body {
+            font-family: 'Instrument Sans', sans-serif;
+        }
+
         textarea::-webkit-scrollbar {
             width: 4px;
         }
@@ -27,6 +38,7 @@
         }
     </style>
 </head>
+
 
 <body class="bg-[#f3f4f6]">
     @if (Auth::check() && !Auth::user()->hasVerifiedEmail())
@@ -71,7 +83,7 @@
                     });
                 }
             }" x-init="checkHeight"
-                class="relative bg-[#fafafa] border border-[#dddddd] p-[20px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-2 font-sans">
+                class="relative bg-[#fafafa] border border-[#dddddd] p-[20px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-2">
                 <div class="w-full flex flex-col justify-center gap-[10px]">
                     <div class="flex justify-between items-center w-full">
                         <div class="flex justify-start items-center gap-[10px] w-full">
@@ -119,7 +131,7 @@
             </div>
 
             <div
-                class="bg-[#fafafa] border border-[#dddddd] pt-5 pb-[30px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-5 font-sans">
+                class="bg-[#fafafa] border border-[#dddddd] pt-5 pb-[30px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-5">
 
                 <div
                     class="overflow-x-hidden overflow-y-auto max-h-[240px] scrollbar-thin scrollbar-thumb-[#c0c0c0] scrollbar-track-[#f0f0f0] scrollbar-thumb-rounded-[4px] w-full">
@@ -160,7 +172,7 @@
                         <input type="hidden" name="post_id" value="{{ $post->id }}">
 
                         <textarea name="content" x-model="content"
-                            class="mb-[5px] bg-transparent border-none outline-none resize-none w-full text-[16px] text-[#454545] h-full font-sans overflow-y-auto scrollbar-thin scrollbar-thumb-[#c0c0c0] scrollbar-track-[#f0f0f0] scrollbar-thumb-rounded-[4px] focus:outline-none focus:ring-0 focus:border-transparent"
+                            class="mb-[5px] bg-transparent border-none outline-none resize-none w-full text-[16px] text-[#454545] h-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#c0c0c0] scrollbar-track-[#f0f0f0] scrollbar-thumb-rounded-[4px] focus:outline-none focus:ring-0 focus:border-transparent"
                             placeholder="What's your comment?"></textarea>
 
                         @error('content')

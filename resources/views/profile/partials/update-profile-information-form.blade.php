@@ -43,7 +43,7 @@
                             {{ $user->userInfo && $user->userInfo->profile_picture === "pfp{$i}.jpg" ? 'checked' : '' }}>
                         <div
                             class="w-16 h-16 rounded-full overflow-hidden border-4 border-transparent peer-checked:border-[#FF9013] transition-all hover:scale-110">
-                            <img src="{{ asset('yusisay/assets/pfp' . $i . '.jpg') }}"
+                            <img src="{{ asset('/assets/pfp' . $i . '.jpg') }}"
                                 alt="Profile Picture {{ $i }}" class="w-full h-full object-cover">
                         </div>
                     </label>

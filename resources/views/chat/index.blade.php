@@ -12,7 +12,6 @@
     @else
         <div class="w-[calc(100vw-16rem)] h-[calc(100vh-7rem)] bg-gray-50 flex">
 
-            <!-- Left Sidebar -->
             <div class="w-1/4 border-r bg-white flex flex-col">
                 <div class="p-4 border-b">
                     <h2 class="text-lg font-bold text-gray-700">Chats</h2>
@@ -25,13 +24,22 @@
                         @foreach ($conversations as $conv)
                             @php
                                 $otherUser = $conv->userOne->id == auth()->id() ? $conv->userTwo : $conv->userOne;
+                                $profilePicture = $otherUser->userInfo->profile_picture ?? null;
                             @endphp
+
                             <li class="cursor-pointer py-2 px-3 hover:bg-green-50 rounded mb-1 border-b flex items-center justify-between"
                                 data-id="{{ $conv->id }}" data-name="{{ $otherUser->name }}">
                                 <div class="flex items-center gap-2">
-                                    <div class="w-7 h-7 rounded-full overflow-hidden">
-                                        <img src="your-image-url.jpg" class="w-full h-full object-cover"
-                                            alt="Profile Picture">
+                                    <div
+                                        class="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center bg-gray-200">
+                                        @if ($profilePicture)
+                                            <img src="{{ asset('assets/' . $profilePicture) }}"
+                                                class="w-full h-full object-cover" alt="{{ $otherUser->name }}">
+                                        @else
+                                            <span class="text-sm font-semibold text-gray-700">
+                                                {{ strtoupper(substr($otherUser->name, 0, 1)) }}
+                                            </span>
+                                        @endif
                                     </div>
                                     <span class="text-gray-700 font-medium">{{ $otherUser->name }}</span>
                                 </div>
