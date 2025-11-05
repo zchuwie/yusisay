@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="w-[calc(100vw-16rem)] h-[calc(100vh-4rem)] bg-gray-50 flex">
+    <div class="w-[calc(100vw-16rem)] h-[calc(100vh-7rem)] bg-gray-50 flex">
 
         <!-- Left Sidebar -->
         <div class="w-1/4 border-r bg-white flex flex-col">
@@ -44,7 +44,7 @@
             </div>
 
             <!-- Messages Section -->
-            <div id="messages" class="flex-1 overflow-y-auto p-4 bg-white"></div>
+            <div id="messages" class="flex-1 flex-col gap-2 overflow-y-auto p-4 bg-white"></div>
 
             <!-- Message Input -->
             <div class="border-t bg-gray-50 p-4 flex items-center">

@@ -32,6 +32,15 @@ document.addEventListener('DOMContentLoaded', () => {
         messageInput.disabled = false;
         sendBtn.disabled = false;
 
+        // Mark as read immediately when opened
+        await fetch(`/chat/${currentConversationId}/mark-read`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+            }
+        });
+
         const res = await fetch(`/chat/${currentConversationId}`);
         const data = await res.json();
         renderMessages(data.messages);
@@ -77,7 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
             `;
 
+            // Start conversation only after first message (not immediately)
             li.addEventListener('click', async () => {
+                if (!confirm(`Start chat with ${user.name}?`)) return;
+
                 const res = await fetch('/chat/start', {
                     method: 'POST',
                     headers: {
@@ -124,18 +136,49 @@ document.addEventListener('DOMContentLoaded', () => {
     // Render conversation messages
     function renderMessages(messages) {
         messagesDiv.innerHTML = '';
-        messages.forEach(m => appendMessage(m, m.sender_id === userId));
+        let lastTimestamp = null;
+
+        messages.forEach(m => {
+            const currentTime = new Date(m.created_at);
+            if (!lastTimestamp || (currentTime - lastTimestamp) / 60000 > 10) {
+                appendTimestamp(currentTime);
+            }
+            appendMessage(m, m.sender_id === userId);
+            lastTimestamp = currentTime;
+        });
+
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    }
+
+    // Append timestamp (every 5 mins or first message)
+    function appendTimestamp(date) {
+        const timeDiv = document.createElement('div');
+        timeDiv.className = "text-center text-gray-400 text-xs my-2";
+        timeDiv.textContent = date.toLocaleString([], {
+            day: '2-digit',
+            month: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+        });
+        messagesDiv.appendChild(timeDiv);
     }
 
     // Append a single message to the UI
     function appendMessage(msg, isMine) {
         const div = document.createElement('div');
-        div.className = `my-2 p-2 rounded-lg max-w-xs ${
-            isMine ? 'bg-green-200 ml-auto text-right' : 'bg-gray-200'
+        div.className = ` p-2 rounded-lg${
+            isMine ? ' ml-auto text-right' : ''
         }`;
         div.textContent = msg.body;
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
+
+    messageInput.addEventListener('keydown', async (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendBtn.click();  
+        }
+    });
 });
