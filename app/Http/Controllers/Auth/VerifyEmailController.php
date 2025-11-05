@@ -22,6 +22,6 @@ class VerifyEmailController extends Controller
             event(new Verified($request->user()));
         }
 
-        return redirect()->intended(route('posts/index', absolute: false).'?verified=1');
+        return redirect()->intended(route('posts.index', absolute: false).'?verified=1');
     }
 }
