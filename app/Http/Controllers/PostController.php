@@ -45,22 +45,22 @@ class PostController extends Controller
 
     public function show($id)
     {
-        $post = Post::with(['comments.user.userInfo', 'user.userInfo'])->findOrFail($id);
+        $post = Post::with(['comments' => function ($query) {
+            $query->latest(); // same as ->orderBy('created_at', 'desc')
+        }, 'comments.user', 'user'])->findOrFail($id);
 
-        return view('posts.show', [
-            'post' => $post,
-            'postId' => $post->id,
-        ]);
+        return view('posts.show', compact('post'));
     }
+    
 
     public function destroy(Post $post)
-    { 
+    {
         if (auth()->id() !== $post->user_id) {
             abort(403, 'Unauthorized action.');
         }
- 
+
         $post->delete();
- 
+
         return redirect()->route('posts.index')->with('success', 'Post deleted successfully.');
     }
 }
