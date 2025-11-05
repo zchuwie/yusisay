@@ -10,10 +10,9 @@ class PostController extends Controller
 {
     public function index()
     {
-        $posts = Post::with(['user', 'comments'])
-            ->latest() // same as ->orderBy('created_at', 'desc')
-            ->get();
-
+        $posts = Post::with(['user', 'comments.user'])
+            ->where('is_hidden', false) // Add this line
+            ->latest()->get();
         return view('posts.index', compact('posts'));
     }
 
