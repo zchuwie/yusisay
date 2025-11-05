@@ -45,6 +45,12 @@
                     @endif
                 </div>
             @endif
+
+            @if ($user->hasVerifiedEmail())
+                <div class="mt-2 font-medium text-sm text-green-600">
+                    {{ __('Your email address is verified.') }}
+                </div>
+            @endif
         </div>
 
         <div class="flex items-center gap-4">

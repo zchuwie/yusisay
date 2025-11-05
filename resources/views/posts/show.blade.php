@@ -29,8 +29,17 @@
 </head>
 
 <body class="bg-[#f3f4f6]">
+     @if(Auth::check() && !Auth::user()->hasVerifiedEmail())
+        <div class="bg-yellow-100 border border-yellow-300 text-yellow-800 p-3 rounded text-center">
+            Your email is not verified yet.
+            <form method="POST" action="{{ route('verification.send') }}" class="inline">
+                @csrf
+                <button type="submit" class="underline text-blue-600">Be verified</button>
+            </form>
+        </div>
+    @endif
     <nav class="bg-white h-[64px] flex items-center mb-4 px-4 sticky top-0 z-50">
-        <a href="{{ url()->previous() }}" class="text-black hover:underline flex items-center">
+        <a href="{{ route('posts.index') }}" class="text-black hover:underline flex items-center">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
             </svg>
@@ -143,6 +152,7 @@
                     @endforelse
                 </div>
 
+                 @if (Auth::check() && Auth::user()->hasVerifiedEmail())
                 <form action="{{ route('comments.store') }}" method="POST" x-data="{ content: '', isAnonymous: false }"
                     @submit.prevent="if (content.trim().length < 1) { alert('Comment must have at least 1 character!'); } else { $el.submit(); }"
                     class="w-full h-[140px] rounded-[16px] bg-[#ededed] px-[16px] pt-[16px] mt-[16px] flex flex-col">
@@ -180,6 +190,7 @@
                         </button>
                     </div>
                 </form>
+                @endif
             </div>
         </div>
     </div>
