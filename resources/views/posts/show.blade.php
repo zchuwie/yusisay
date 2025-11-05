@@ -98,23 +98,102 @@
                             </div>
                         </div>
                         <div class="flex justify-end items-center">
-                            <div class="ml-[20px] mt-[2px] self-center">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="4" height="18" viewBox="0 0 4 18"
-                                    fill="none">
-                                    <path
-                                        d="M2 10C2.55 10 3 9.55 3 9C3 8.45 2.55 8 2 8C1.45 8 1 8.45 1 9C1 9.55 1.45 10 2 10Z"
-                                        stroke="#6A6A6A" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                    <path
-                                        d="M2 3C2.55 3 3 2.55 3 2C3 1.45 2.55 1 2 1C1.45 1 1 1.45 1 2C1 2.55 1.45 3 2 3Z"
-                                        stroke="#6A6A6A" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                    <path
-                                        d="M2 17C2.55 17 3 16.55 3 16C3 15.45 2.55 15 2 15C1.45 15 1 15.45 1 16C1 16.55 1.45 17 2 17Z"
-                                        stroke="#6A6A6A" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round" />
-                                </svg>
+                            <!-- Three Dots Dropdown -->
+                            <div class="ml-[20px] mt-[2px] self-center relative" x-data="{ open: false, showReportModal: false, showDeleteModal: false, reason: '' }">
+
+                                <!-- Trigger -->
+                                <button @click="open = !open" class="cursor-pointer">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="4" height="18"
+                                        viewBox="0 0 4 18" fill="none">
+                                        <path
+                                            d="M2 10C2.55 10 3 9.55 3 9C3 8.45 2.55 8 2 8C1.45 8 1 8.45 1 9C1 9.55 1.45 10 2 10Z"
+                                            stroke="#6A6A6A" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path
+                                            d="M2 3C2.55 3 3 2.55 3 2C3 1.45 2.55 1 2 1C1.45 1 1 1.45 1 2C1 2.55 1.45 3 2 3Z"
+                                            stroke="#6A6A6A" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                        <path
+                                            d="M2 17C2.55 17 3 16.55 3 16C3 15.45 2.55 15 2 15C1.45 15 1 15.45 1 16C1 16.55 1.45 17 2 17Z"
+                                            stroke="#6A6A6A" stroke-width="2" stroke-linecap="round"
+                                            stroke-linejoin="round" />
+                                    </svg>
+                                </button>
+
+                                <!-- Dropdown -->
+                                <div x-show="open" @click.outside="open = false" x-transition
+                                    class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
+                                    @if (Auth::check() && Auth::id() === $post->user_id)
+                                        <!-- Delete -->
+                                        <button @click="open = false; showDeleteModal = true"
+                                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100">
+                                            Delete
+                                        </button>
+                                    @else
+                                        <!-- Report -->
+                                        <button @click="open = false; showReportModal = true"
+                                            class="w-full text-left px-4 py-2 text-sm text-[#454545] hover:bg-gray-100 flex items-center gap-2">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2">
+                                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                                <line x1="4" y1="22" x2="4" y2="15" />
+                                            </svg>
+                                            Report
+                                        </button>
+                                    @endif
+                                </div>
+
+                                <!-- Report Modal -->
+                                <div x-show="showReportModal" @click.self="showReportModal = false" x-transition
+                                    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+                                    <div class="p-8 bg-[#fafafa] rounded-[16px] w-[400px] flex flex-col gap-[20px]">
+                                        <h3 class="text-[20px] font-bold text-[#454545]">Report Post</h3>
+                                        <form action="{{ route('reports.store') }}" method="POST">
+                                            @csrf
+                                            <input type="hidden" name="post_id" value="{{ $post->id }}">
+                                            <textarea name="reason" x-model="reason" rows="4"
+                                                class="block p-2.5 w-full text-sm text-[#454545] bg-white rounded-lg border border-[#dddddd] focus:ring-[#e4800d] focus:border-[#e4800d] mb-4"
+                                                placeholder="Why are you reporting this post? (Optional)"></textarea>
+                                            <div class="flex justify-end gap-3">
+                                                <button type="button" @click="showReportModal = false; reason = ''"
+                                                    class="px-4 py-2 text-sm text-[#454545] bg-gray-200 rounded-lg hover:bg-gray-300">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit"
+                                                    class="px-4 py-2 text-sm text-white bg-[#FF9013] rounded-lg hover:bg-[#d77506]">
+                                                    Submit
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <!-- Delete Modal -->
+                                <div x-show="showDeleteModal" @click.self="showDeleteModal = false" x-transition
+                                    class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+                                    <div class="p-8 bg-[#fafafa] rounded-[16px] w-[400px] flex flex-col gap-[20px]">
+                                        <h3 class="text-[20px] font-bold text-[#454545]">Delete Post</h3>
+                                        <p class="text-sm text-[#6a6a6a]">Are you sure you want to delete this post?
+                                            This action cannot be undone.</p>
+                                        <form action="{{ route('posts.destroy', $post->id) }}" method="POST">
+                                            @csrf
+                                            @method('DELETE')
+                                            <div class="flex justify-end gap-3">
+                                                <button type="button" @click="showDeleteModal = false"
+                                                    class="px-4 py-2 text-sm text-[#454545] bg-gray-200 rounded-lg hover:bg-gray-300">
+                                                    Cancel
+                                                </button>
+                                                <button type="submit"
+                                                    class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700">
+                                                    Delete
+                                                </button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
                             </div>
+
                         </div>
                     </div>
 
