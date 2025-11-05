@@ -10,11 +10,12 @@ class PostController extends Controller
 {
     public function index()
     {
-        $posts = Post::with(['user', 'comments.user'])
-            ->where('is_hidden', false) // Add this line
+        $posts = Post::with(['user.userInfo', 'comments.user'])
+            ->where('is_hidden', false)
             ->latest()->get();
         return view('posts.index', compact('posts'));
     }
+
 
     public function store(Request $request)
     {
@@ -34,7 +35,7 @@ class PostController extends Controller
 
     public function history()
     {
-        $posts = Post::with(['user', 'comments'])
+        $posts = Post::with(['user.userInfo', 'comments'])
             ->where('user_id', Auth::id())
             ->latest()
             ->get();
@@ -44,11 +45,22 @@ class PostController extends Controller
 
     public function show($id)
     {
-        $post = Post::with(['comments.user'])->findOrFail($id);
+        $post = Post::with(['comments.user.userInfo', 'user.userInfo'])->findOrFail($id);
 
         return view('posts.show', [
             'post' => $post,
             'postId' => $post->id,
         ]);
+    }
+
+    public function destroy(Post $post)
+    {
+        if (auth()->id() !== $post->user_id) {
+            abort(403, 'Unauthorized');
+        }
+
+        $post->delete();
+
+        return redirect()->back()->with('success', 'Post deleted successfully.');
     }
 }

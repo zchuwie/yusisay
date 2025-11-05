@@ -1,3 +1,6 @@
+@props(['post', 'username', 'time', 'content', 'commentsCount', 'postId', 'isOwner' => false])
+
+
 <div class="relative group">
     <div
         class="bg-[#fafafa] border border-[#dddddd] p-[30px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-5 font-sans">
@@ -6,11 +9,24 @@
             <div class="flex justify-between items-center w-full">
 
                 <div class="flex items-center gap-3 w-full">
-                    <div class="w-7 h-7 rounded-full overflow-hidden">
-                        <img src="your-image-url.jpg" class="w-full h-full object-cover" alt="Profile Picture">
+                    <!-- ✅ Profile Picture -->
+                    <x-user-avatar :user="$post->user" :isAnonymous="$post->is_anonymous" />
+                    @if ($isOwner)
+                        <div class="text-[16px] font-bold text-[#454545]">
+                            {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}<p class="inline ml-1 text-[12px] text-[#8d8d8d]">(You)</p>
+                        </div>
+                    @elseif (!$post->is_anonymous)
+                        <div class="text-[16px] font-bold text-[#454545]">
+                            {{ $post->user->name }}
+                        </div>
+                    @else
+                        <div class="text-[16px] font-bold text-[#454545]">
+                            Anonymous
+                        </div>
+                    @endif
+                    <div class="mt-1 text-[12px] text-[#8d8d8d]">
+                        {{ $post->created_at->diffForHumans() }}
                     </div>
-                    <div class="text-[16px] font-bold text-[#454545]">{{ $username }}</div>
-                    <div class="mt-1 text-[12px] text-[#8d8d8d]">{{ $time }}</div>
                 </div>
 
                 <div class="flex justify-end items-center gap-1.5 w-full self-center">
@@ -26,37 +42,48 @@
                     <div class="text-[#454545] self-center text-[12px] mt-1">{{ $commentsCount }}</div>
 
                     <!-- Three dots menu with dropdown -->
-                    <div class="ml-5 mt-[1px] self-center relative z-20" x-data="{ open: false, showReasonModal: false, reason: '' }">
+                    <div class="ml-5 mt-[1px] self-center relative z-20" x-data="{ open: false, showReasonModal: false, showDeleteModal: false, reason: '' }">
+
                         <button @click="open = !open" class="cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="4" height="18" viewBox="0 0 4 18"
                                 fill="none">
                                 <path
-                                    d="M2 10C2.55228 10 3 9.55228 3 9C3 8.44772 2.55228 8 2 8C1.44772 8 1 8.44772 1 9C1 9.55228 1.44772 10 2 10Z"
+                                    d="M2 10C2.552 10 3 9.552 3 9C3 8.448 2.552 8 2 8C1.448 8 1 8.448 1 9C1 9.552 1.448 10 2 10Z"
                                     stroke="#6A6A6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 <path
-                                    d="M2 3C2.55228 3 3 2.55228 3 2C3 1.44772 2.55228 1 2 1C1.44772 1 1 1.44772 1 2C1 2.55228 1.44772 3 2 3Z"
+                                    d="M2 3C2.552 3 3 2.552 3 2C3 1.448 2.552 1 2 1C1.448 1 1 1.448 1 2C1 2.552 1.448 3 2 3Z"
                                     stroke="#6A6A6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                                 <path
-                                    d="M2 17C2.55228 17 3 16.5523 3 16C3 15.4477 2.55228 15 2 15C1.44772 15 1 15.4477 1 16C1 16.5523 1.44772 17 2 17Z"
+                                    d="M2 17C2.552 17 3 16.552 3 16C3 15.448 2.552 15 2 15C1.448 15 1 15.448 1 16C1 16.552 1.448 17 2 17Z"
                                     stroke="#6A6A6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
                             </svg>
                         </button>
 
-                        <!-- Dropdown menu -->
+                        <!-- Dropdown -->
                         <div x-show="open" @click.outside="open = false" x-transition
                             class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1">
-                            <button @click="open = false; showReasonModal = true"
-                                class="w-full text-left px-4 py-2 text-sm text-[#454545] hover:bg-gray-100 flex items-center gap-2">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
-                                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                                    <line x1="4" y1="22" x2="4" y2="15" />
-                                </svg>
-                                Report
-                            </button>
+
+                            @if ($isOwner)
+                                <!-- Delete Button -->
+                                <button @click="open = false; showDeleteModal = true"
+                                    class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-gray-100 flex items-center gap-2">
+                                    Delete
+                                </button>
+                            @else
+                                <!-- Report Button -->
+                                <button @click="open = false; showReasonModal = true"
+                                    class="w-full text-left px-4 py-2 text-sm text-[#454545] hover:bg-gray-100 flex items-center gap-2">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                                        viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                        <line x1="4" y1="22" x2="4" y2="15" />
+                                    </svg>
+                                    Report
+                                </button>
+                            @endif
                         </div>
 
-                        <!-- Report Reason Modal -->
+                        <!-- Report Modal -->
                         <div x-show="showReasonModal" @click.self="showReasonModal = false" x-transition
                             class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
                             <div class="p-8 bg-[#fafafa] rounded-[16px] w-[400px] flex flex-col gap-[20px]">
@@ -83,7 +110,34 @@
                                 </form>
                             </div>
                         </div>
+
+                        <!-- Delete Modal -->
+                        <div x-show="showDeleteModal" @click.self="showDeleteModal = false" x-transition
+                            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
+                            <div class="p-8 bg-[#fafafa] rounded-[16px] w-[400px] flex flex-col gap-[20px]">
+                                <h3 class="text-[20px] font-bold text-[#454545]">Delete Post</h3>
+                                <p class="text-sm text-[#6a6a6a]">Are you sure you want to delete this post? This action
+                                    cannot be undone.</p>
+
+                                <form action="{{ route('posts.destroy', $post->id) }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+
+                                    <div class="flex justify-end gap-3">
+                                        <button type="button" @click="showDeleteModal = false"
+                                            class="px-4 py-2 text-sm text-[#454545] bg-gray-200 rounded-lg hover:bg-gray-300">
+                                            Cancel
+                                        </button>
+                                        <button type="submit"
+                                            class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700">
+                                            Delete
+                                        </button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
                     </div>
+
                 </div>
             </div>
 

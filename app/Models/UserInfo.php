@@ -14,6 +14,18 @@ class UserInfo extends Model
         'profile_picture',
     ];
 
+    public function userInfo()
+    {
+        return $this->hasOne(UserInfo::class);
+    }
+
+    public function getProfilePicture()
+    {
+        if ($this->userInfo && $this->userInfo->profile_picture) {
+            return asset('assets/' . $this->userInfo->profile_picture);
+        }
+        return null;
+    }
     public function user()
     {
         return $this->belongsTo(User::class);

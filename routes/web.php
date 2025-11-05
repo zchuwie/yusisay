@@ -27,7 +27,9 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::get('/chat', [ChatController::class, 'index'])->name('chat.index');
-    Route::get('/chat/search', [ChatController::class, 'search']);
+    Route::get('/search-users', [ChatController::class, 'search'])->name('users.search');
+
+
     Route::get('/chat/{conversation}', [ChatController::class, 'show']);
     Route::post('/chat/message', [ChatController::class, 'sendMessage']);
     Route::post('/chat/start', [ChatController::class, 'startConversation']);
@@ -40,6 +42,8 @@ Route::middleware('auth')->group(function () {
     Route::get('/posts/{id}', [PostController::class, 'show'])->name('posts.show');
 
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 });
 
 require __DIR__ . '/auth.php';

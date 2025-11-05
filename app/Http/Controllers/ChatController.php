@@ -23,12 +23,23 @@ class ChatController extends Controller
 
     public function search(Request $request)
     {
-        $users = User::where('name', 'like', "%{$request->q}%")
-            ->where('id', '!=', Auth::id())
-            ->get();
+        $search = $request->input('query');
+
+        $users = User::where('name', 'like', "%{$search}%")
+            ->where('id', '!=', auth()->id())
+            ->with('userInfo') // include profile picture
+            ->get()
+            ->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'profile_picture' => $user->userInfo->profile_picture ?? null,
+                ];
+            });
 
         return response()->json($users);
     }
+
 
     public function show(Conversation $conversation)
     {
