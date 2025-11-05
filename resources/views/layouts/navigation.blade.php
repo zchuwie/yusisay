@@ -24,7 +24,7 @@
                 <div class="relative py-6 px-8 cursor-pointer group transition-all rounded-xl duration-200 
     {{ request()->routeIs('posts.index')
         ? 'bg-[#FF9013] text-white'
-        : 'hover:bg-gray-100 hover:text-gray-900 text-gray-400' }}"
+        : 'hover:bg-gray-200 hover:text-gray-900 text-gray-400' }}"
                     x-data="{ show: false }" @mouseenter="show = true" @mouseleave="show = false"
                     @click="$refs.link.click()">
                     <a href="{{ route('posts.index') }}" x-ref="link"
@@ -55,7 +55,7 @@
                 <div class="relative py-6 px-8 cursor-pointer group transition-all rounded-xl duration-200 
     {{ request()->routeIs('chat.index')
         ? 'bg-[#FF9013] text-white'
-        : 'hover:bg-gray-100 hover:text-gray-900 text-gray-400' }}"
+        : 'hover:bg-gray-200 hover:text-gray-900 text-gray-400' }}"
                     x-data="{ show: false }" @mouseenter="show = true" @mouseleave="show = false"
                     @click="$refs.link.click()">
                     <a href="{{ route('chat.index') }}" x-ref="link"
@@ -86,7 +86,7 @@
                 <div class="relative py-6 px-8 cursor-pointer group transition-all duration-200  rounded-xl 
     {{ request()->routeIs('posts.history')
         ? 'bg-[#FF9013] text-white'
-        : 'hover:bg-gray-100 hover:text-gray-900 text-gray-400' }}"
+        : 'hover:bg-gray-200 hover:text-gray-900 text-gray-400' }}"
                     x-data="{ show: false }" @mouseenter="show = true" @mouseleave="show = false"
                     @click="$refs.link.click()">
                     <a href="{{ route('posts.history') }}" x-ref="link"

@@ -3,7 +3,7 @@
 
 <div class="relative group">
     <div
-        class="bg-[#fafafa] border border-[#dddddd] p-[30px] px-[37px] w-[600px] rounded-2xl flex flex-col items-center justify-center mb-5 font-sans">
+        class="bg-[#fafafa] border border-[#dddddd] p-[30px] px-[37px] w-[600px] rounded-2xl flex flex-col items-center justify-center mb-2 font-sans">
         <div class="flex flex-col justify-center gap-6 w-full">
 
             <div class="flex justify-between items-center w-full">
