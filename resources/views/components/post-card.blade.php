@@ -43,7 +43,7 @@
                     <div class="text-[#454545] self-center text-[12px] mt-1">{{ $commentsCount }}</div>
 
                     <!-- Three dots menu with dropdown -->
-                    <div class="ml-5 mt-[1px] self-center relative z-20" x-data="{ open: false, showReasonModal: false, showDeleteModal: false, reason: '' }">
+                    <div class="ml-5 pt-[6px] self-center relative z-20" x-data="{ open: false, showReasonModal: false, showDeleteModal: false, reason: '' }">
 
                         <button @click="open = !open" class="cursor-pointer">
                             <svg xmlns="http://www.w3.org/2000/svg" width="4" height="18" viewBox="0 0 4 18"
