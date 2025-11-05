@@ -6,7 +6,7 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\AdminController;
-use Illuminate\Support\Facades\Route; 
+use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('auth.login');
@@ -16,9 +16,6 @@ Route::get('/admin', function () {
     return view('admin');
 })->name('admin');
 
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
 Route::get('/admin/report', [AdminController::class, 'report'])->name('admin.report');
@@ -42,7 +39,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/comments', [CommentController::class, 'store'])->name('comments.store');
     Route::get('/posts/{id}', [PostController::class, 'show'])->name('posts.show');
 
-    Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');  
+    Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
 });
 
 require __DIR__ . '/auth.php';
