@@ -40,6 +40,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/posts/{id}', [PostController::class, 'show'])->name('posts.show');
 
     Route::post('/reports', [ReportController::class, 'store'])->name('reports.store');
+
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
+
 });
 
 require __DIR__ . '/auth.php';
