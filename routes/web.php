@@ -6,6 +6,9 @@ use App\Http\Controllers\CommentController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\Admin\AdminController;
+use App\Http\Controllers\Admin\ReportController as AdminReportController; // Aliased Admin Report Controller
+use App\Http\Controllers\Admin\CensoredWordController;
+use App\Http\Controllers\Admin\UserController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -15,11 +18,6 @@ Route::get('/', function () {
 Route::get('/admin', function () {
     return view('admin');
 })->name('admin');
-
-
-Route::get('/admin/dashboard', [AdminController::class, 'index'])->name('admin.dashboard');
-Route::get('/admin/report', [AdminController::class, 'report'])->name('admin.report');
-Route::get('/admin/user', [AdminController::class, 'user'])->name('admin.user');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
@@ -45,5 +43,30 @@ Route::middleware('auth')->group(function () {
 
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('posts.destroy');
 });
+
+Route::prefix('admin')->name('admin.')->group(function () {
+
+    Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
+    Route::get('users', [AdminController::class, 'user'])->name('user');
+    Route::get('reports', [AdminController::class, 'report'])->name('report');
+    Route::get('/api/reports', [AdminReportController::class, 'index'])->name('reports.index');
+    Route::put('/reports/{reportId}/resolve', [AdminReportController::class, 'resolve'])->name('reports.resolve');
+    Route::get('/api/censored-words', [CensoredWordController::class, 'index'])->name('censored_words.index');
+    Route::post('/api/censored-words', [CensoredWordController::class, 'store'])->name('censored_words.store');
+    Route::delete('/censored-words/{id}', [CensoredWordController::class, 'destroy'])->name('censored_words.destroy');
+});
+
+Route::get('reports', [AdminController::class, 'report'])->name('report');
+Route::get('/api/reports', [AdminReportController::class, 'index'])->name('reports.index');
+Route::put('/reports/{reportId}/resolve', [AdminReportController::class, 'resolve'])->name('reports.resolve');
+Route::get('/api/censored-words', [CensoredWordController::class, 'index'])->name('censored_words.index');
+Route::post('/api/censored-words', [CensoredWordController::class, 'store'])->name('censored_words.store');
+Route::delete('/censored-words/{id}', [CensoredWordController::class, 'destroy'])->name('censored_words.destroy');
+Route::get('users', [AdminController::class, 'user'])->name('user');
+Route::get('/api/users', [UserController::class, 'index'])->name('users.index');
+
+Route::get('/admin/api/users', [UserController::class, 'index']);
+Route::get('/admin/api/users', [UserController::class, 'index'])->name('admin.api.users');
+Route::get('/admin/api/reports', [ReportController::class, 'index'])->name('admin.api.reports');
 
 require __DIR__ . '/auth.php';
