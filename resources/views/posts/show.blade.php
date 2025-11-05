@@ -87,9 +87,7 @@
                 <div class="w-full flex flex-col justify-center gap-[10px]">
                     <div class="flex justify-between items-center w-full">
                         <div class="flex justify-start items-center gap-[10px] w-full">
-                            <div class="w-7 h-7 rounded-full overflow-hidden">
-                                <img src="your-image-url.jpg" class="w-full h-full object-cover" alt="Profile Picture">
-                            </div>
+                            <x-user-avatar :user="$post->user" :isAnonymous="$post->is_anonymous" />
                             <div class="text-[16px] text-[#454545] font-bold">
                                 {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}
                             </div>
