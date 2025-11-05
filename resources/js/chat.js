@@ -28,22 +28,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
         currentConversationId = newConversationId;
         currentChatUserName = item.dataset.name;
+
+        // Update UI immediately for instant feedback
         chatUserName.textContent = currentChatUserName;
         messageInput.disabled = false;
         sendBtn.disabled = false;
+        messagesDiv.innerHTML = '<div class="text-center text-gray-400 py-8">Loading messages...</div>';
 
-        // Mark as read immediately when opened
-        await fetch(`/chat/${currentConversationId}/mark-read`, {
+        const fetchPromise = fetch(`/chat/${currentConversationId}`);
+
+        fetch(`/chat/${currentConversationId}/mark-read`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
             }
-        });
+        }).catch(err => console.error('Mark read failed:', err));
 
-        const res = await fetch(`/chat/${currentConversationId}`);
-        const data = await res.json();
-        renderMessages(data.messages);
+        // Wait only for messages
+        try {
+            const res = await fetchPromise;
+            const data = await res.json();
+            renderMessages(data.messages);
+        } catch (err) {
+            messagesDiv.innerHTML = '<div class="text-center text-red-500 py-8">Failed to load messages</div>';
+            console.error('Failed to load messages:', err);
+            return;
+        }
 
         // Subscribe to real-time updates for this conversation
         window.currentEchoChannel = Echo.private(`conversation.${currentConversationId}`)
@@ -119,39 +130,54 @@ document.addEventListener('DOMContentLoaded', () => {
         const body = messageInput.value.trim();
         if (!body || !currentConversationId) return;
 
-        const res = await fetch('/chat/message', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
-            },
-            body: JSON.stringify({ conversation_id: currentConversationId, body })
-        });
-
-        const msg = await res.json();
-        appendMessage(msg, true);
+        const messageCopy = body;
         messageInput.value = '';
+        messageInput.disabled = true;
+        sendBtn.disabled = true;
+
+        try {
+            const res = await fetch('/chat/message', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                },
+                body: JSON.stringify({ conversation_id: currentConversationId, body: messageCopy })
+            });
+
+            const msg = await res.json();
+            appendMessage(msg, true);
+        } catch (err) {
+            messageInput.value = messageCopy;
+            console.error('Failed to send message:', err);
+        } finally {
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            messageInput.focus();
+        }
     });
 
-    // Render conversation messages
+    // Conversation
     function renderMessages(messages) {
         messagesDiv.innerHTML = '';
+        const fragment = document.createDocumentFragment();
         let lastTimestamp = null;
 
         messages.forEach(m => {
             const currentTime = new Date(m.created_at);
             if (!lastTimestamp || (currentTime - lastTimestamp) / 60000 > 10) {
-                appendTimestamp(currentTime);
+                fragment.appendChild(createTimestamp(currentTime));
             }
-            appendMessage(m, m.sender_id === userId);
+            fragment.appendChild(createMessageElement(m, m.sender_id === userId));
             lastTimestamp = currentTime;
         });
 
+        messagesDiv.appendChild(fragment);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
 
-    // Append timestamp (every 5 mins or first message)
-    function appendTimestamp(date) {
+    // Oras
+    function createTimestamp(date) {
         const timeDiv = document.createElement('div');
         timeDiv.className = "text-center text-gray-400 text-xs my-2";
         timeDiv.textContent = date.toLocaleString([], {
@@ -161,16 +187,19 @@ document.addEventListener('DOMContentLoaded', () => {
             minute: '2-digit',
             hour12: true,
         });
-        messagesDiv.appendChild(timeDiv);
+        return timeDiv;
     }
 
-    // Append a single message to the UI
-    function appendMessage(msg, isMine) {
+    function createMessageElement(msg, isMine) {
         const div = document.createElement('div');
-        div.className = ` p-2 rounded-lg${
-            isMine ? ' ml-auto text-right' : ''
-        }`;
+        div.className = `p-2 rounded-lg${isMine ? ' ml-auto text-right' : ''}`;
         div.textContent = msg.body;
+        return div;
+    }
+
+    // Para realtime yong UI
+    function appendMessage(msg, isMine) {
+        const div = createMessageElement(msg, isMine);
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
@@ -178,7 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     messageInput.addEventListener('keydown', async (e) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
-            sendBtn.click();  
+            sendBtn.click();
         }
     });
 });
