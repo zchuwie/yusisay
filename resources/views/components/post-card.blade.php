@@ -13,7 +13,8 @@
                     <x-user-avatar :user="$post->user" :isAnonymous="$post->is_anonymous" />
                     @if ($isOwner)
                         <div class="text-[16px] font-bold text-[#454545]">
-                            {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}<p class="inline ml-1 text-[12px] text-[#8d8d8d]">(You)</p>
+                            {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}<p
+                                class="inline ml-1 text-[12px] text-[#8d8d8d]">(You)</p>
                         </div>
                     @elseif (!$post->is_anonymous)
                         <div class="text-[16px] font-bold text-[#454545]">
@@ -84,58 +85,63 @@
                         </div>
 
                         <!-- Report Modal -->
-                        <div x-show="showReasonModal" @click.self="showReasonModal = false" x-transition
-                            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-                            <div class="p-8 bg-[#fafafa] rounded-[16px] w-[400px] flex flex-col gap-[20px]">
-                                <h3 class="text-[20px] font-bold text-[#454545]">Report Post</h3>
+                        <template x-teleport="body">
+                            <div x-show="showDeleteModal" @click.self="showDeleteModal = false" x-transition
+                                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-[9999]">
+                                <div class="p-8 bg-[#fafafa] rounded-[16px] w-[400px] flex flex-col gap-[20px]">
+                                    <h3 class="text-[20px] font-bold text-[#454545]">Delete Post</h3>
+                                    <p class="text-sm text-[#6a6a6a]">
+                                        Are you sure you want to delete this post? This action cannot be undone.
+                                    </p>
 
-                                <form action="{{ route('reports.store') }}" method="POST">
-                                    @csrf
-                                    <input type="hidden" name="post_id" value="{{ $postId }}">
-
-                                    <textarea name="reason" x-model="reason" rows="4"
-                                        class="block p-2.5 w-full text-sm text-[#454545] bg-white rounded-lg border border-[#dddddd] focus:ring-[#e4800d] focus:border-[#e4800d] mb-4"
-                                        placeholder="Why are you reporting this post? (Optional)"></textarea>
-
-                                    <div class="flex justify-end gap-3">
-                                        <button type="button" @click="showReasonModal = false; reason = ''"
-                                            class="px-4 py-2 text-sm text-[#454545] bg-gray-200 rounded-lg hover:bg-gray-300">
-                                            Cancel
-                                        </button>
-                                        <button type="submit"
-                                            class="px-4 py-2 text-sm text-white bg-[#FF9013] rounded-lg hover:bg-[#d77506]">
-                                            Submit Report
-                                        </button>
-                                    </div>
-                                </form>
+                                    <form action="{{ route('posts.destroy', $post->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <div class="flex justify-end gap-3 mt-4">
+                                            <button type="button" @click="showDeleteModal = false"
+                                                class="px-4 py-2 text-sm text-[#454545] bg-gray-200 rounded-lg hover:bg-gray-300">
+                                                Cancel
+                                            </button>
+                                            <button type="submit"
+                                                class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700">
+                                                Delete
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
+                        </template>
 
                         <!-- Delete Modal -->
-                        <div x-show="showDeleteModal" @click.self="showDeleteModal = false" x-transition
-                            class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50">
-                            <div class="p-8 bg-[#fafafa] rounded-[16px] w-[400px] flex flex-col gap-[20px]">
-                                <h3 class="text-[20px] font-bold text-[#454545]">Delete Post</h3>
-                                <p class="text-sm text-[#6a6a6a]">Are you sure you want to delete this post? This action
-                                    cannot be undone.</p>
+                        <template x-teleport="body">
+                            <div x-show="showReasonModal" @click.self="showReasonModal = false" x-transition
+                                class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-[9999]">
+                                <div class="p-8 bg-[#fafafa] rounded-[16px] w-[400px] flex flex-col gap-[20px]">
+                                    <h3 class="text-[20px] font-bold text-[#454545]">Report Post</h3>
 
-                                <form action="{{ route('posts.destroy', $post->id) }}" method="POST">
-                                    @csrf
-                                    @method('DELETE')
+                                    <form action="{{ route('reports.store') }}" method="POST">
+                                        @csrf
+                                        <input type="hidden" name="post_id" value="{{ $postId }}">
 
-                                    <div class="flex justify-end gap-3">
-                                        <button type="button" @click="showDeleteModal = false"
-                                            class="px-4 py-2 text-sm text-[#454545] bg-gray-200 rounded-lg hover:bg-gray-300">
-                                            Cancel
-                                        </button>
-                                        <button type="submit"
-                                            class="px-4 py-2 text-sm text-white bg-red-600 rounded-lg hover:bg-red-700">
-                                            Delete
-                                        </button>
-                                    </div>
-                                </form>
+                                        <textarea name="reason" x-model="reason" rows="4"
+                                            class="block p-2.5 w-full text-sm text-[#454545] bg-white rounded-lg border border-[#dddddd] focus:ring-[#e4800d] focus:border-[#e4800d] mb-4"
+                                            placeholder="Why are you reporting this post? (Optional)"></textarea>
+
+                                        <div class="flex justify-end gap-3">
+                                            <button type="button" @click="showReasonModal = false; reason = ''"
+                                                class="px-4 py-2 text-sm text-[#454545] bg-gray-200 rounded-lg hover:bg-gray-300">
+                                                Cancel
+                                            </button>
+                                            <button type="submit"
+                                                class="px-4 py-2 text-sm text-white bg-[#FF9013] rounded-lg hover:bg-[#d77506]">
+                                                Submit Report
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
                             </div>
-                        </div>
+                        </template>
+
                     </div>
 
                 </div>

@@ -10,9 +10,10 @@ class PostController extends Controller
 {
     public function index()
     {
-        $posts = Post::with(['user.userInfo', 'comments.user'])
-            ->where('is_hidden', false)
-            ->latest()->get();
+        $posts = Post::with(['user', 'comments'])
+            ->latest() // same as ->orderBy('created_at', 'desc')
+            ->get();
+
         return view('posts.index', compact('posts'));
     }
 
@@ -20,17 +21,18 @@ class PostController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'content' => 'required|string|max:500',
-            'is_anonymous' => 'boolean'
+            'content' => 'required|string|max:1000',
+            'is_anonymous' => 'boolean',
         ]);
 
-        Post::create([
+        $post = Post::create([
             'user_id' => Auth::id(),
-            'is_anonymous' => $request->boolean('is_anonymous'),
-            'content' => $validated['content']
+            'content' => $validated['content'],
+            'is_anonymous' => $validated['is_anonymous'] ?? false,
         ]);
 
-        return back()->with('success', 'Post created successfully!');
+        return redirect()->route('posts.index')
+            ->with('success', 'Your post has been added successfully!');
     }
 
     public function history()
@@ -51,16 +53,18 @@ class PostController extends Controller
 
         return view('posts.show', compact('post'));
     }
-    
+
 
     public function destroy(Post $post)
     {
-        if (auth()->id() !== $post->user_id) {
-            abort(403, 'Unauthorized action.');
+        // Optional: Ensure only owner can delete
+        if ($post->user_id !== Auth::id()) {
+            abort(403);
         }
 
         $post->delete();
 
-        return redirect()->route('posts.index')->with('success', 'Post deleted successfully.');
+        return redirect()->route('posts.index')
+            ->with('success', 'Your post has been deleted successfully.');
     }
 }
