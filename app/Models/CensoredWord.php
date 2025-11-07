@@ -9,13 +9,5 @@ class CensoredWord extends Model
 {
     use HasFactory;
 
-    /**
-     * The attributes that are mass assignable.
-     * Ensure 'user_id' is NOT listed here.
-     *
-     * @var array<int, string>
-     */
-    protected $fillable = [
-        'word',
-    ];
+    protected $fillable = ['word'];
 }
