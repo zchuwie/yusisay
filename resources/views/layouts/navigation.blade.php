@@ -20,7 +20,7 @@
                 </div>
             </div>
 
-            <div class="flex justify-between gap-6">
+            <div class="flex justify-center gap-6 flex-1">
                 <div class="relative py-6 px-8 cursor-pointer group transition-all rounded-xl duration-200 
     {{ request()->routeIs('posts.index')
         ? 'bg-[#FF9013] text-white'
