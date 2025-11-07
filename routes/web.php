@@ -58,7 +58,7 @@ Route::prefix('admin')->name('admin.')->group(function () {
     // Censored Words API
     Route::get('/api/censored-words', [CensoredWordController::class, 'index'])->name('censored_words.index');
     Route::post('/api/censored-words', [CensoredWordController::class, 'store'])->name('censored_words.store');
-    Route::delete('/api/censored-words/{id}', [CensoredWordController::class, 'destroy'])->name('censored_words.destroy');
+    Route::delete('/api/censored-words/{censored_word}', [CensoredWordController::class, 'destroy'])->name('censored_words.destroy');
     
     // Users API
     Route::get('/api/users', [UserController::class, 'index'])->name('users.index');
