@@ -46,29 +46,22 @@ Route::middleware('auth')->group(function () {
 
 });
 
-Route::prefix('admin')->name('admin.')->group(function () {
 
+Route::prefix('admin')->name('admin.')->group(function () {
+    // Admin View Routes (admin/dashboard, admin/users, admin/reports)
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('users', [AdminController::class, 'user'])->name('user');
     Route::get('reports', [AdminController::class, 'report'])->name('report');
     Route::get('/api/reports', [AdminReportController::class, 'index'])->name('reports.index');
-    Route::put('/reports/{reportId}/resolve', [AdminReportController::class, 'resolve'])->name('reports.resolve');
+    Route::put('/api/reports/{reportId}/resolve', [AdminReportController::class, 'resolve'])->name('reports.resolve');
+    
+    // Censored Words API
     Route::get('/api/censored-words', [CensoredWordController::class, 'index'])->name('censored_words.index');
     Route::post('/api/censored-words', [CensoredWordController::class, 'store'])->name('censored_words.store');
-    Route::delete('/censored-words/{id}', [CensoredWordController::class, 'destroy'])->name('censored_words.destroy');
-});
-
-Route::get('reports', [AdminController::class, 'report'])->name('report');
-Route::get('/api/reports', [AdminReportController::class, 'index'])->name('reports.index');
-Route::put('/reports/{reportId}/resolve', [AdminReportController::class, 'resolve'])->name('reports.resolve');
-Route::get('/api/censored-words', [CensoredWordController::class, 'index'])->name('censored_words.index');
-Route::post('/api/censored-words', [CensoredWordController::class, 'store'])->name('censored_words.store');
-Route::delete('/censored-words/{id}', [CensoredWordController::class, 'destroy'])->name('censored_words.destroy');
-Route::get('users', [AdminController::class, 'user'])->name('user');
-Route::get('/api/users', [UserController::class, 'index'])->name('users.index');
-
-Route::get('/admin/api/users', [UserController::class, 'index']);
-Route::get('/admin/api/users', [UserController::class, 'index'])->name('admin.api.users');
-Route::get('/admin/api/reports', [ReportController::class, 'index'])->name('admin.api.reports');
+    Route::delete('/api/censored-words/{censored_word}', [CensoredWordController::class, 'destroy'])->name('censored_words.destroy');
+    
+    // Users API
+    Route::get('/api/users', [UserController::class, 'index'])->name('users.index');
+});-
 
 require __DIR__ . '/auth.php';

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
+use App\Models\Report; // Added for cleanup
+use App\Models\Comment; // Added for cleanup
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -56,14 +58,18 @@ class PostController extends Controller
 
     public function destroy(Post $post)
     {
-        // Optional: Ensure only owner can delete
+        // Owner check: Ensure only owner can delete (or an admin via separate route/check)
         if ($post->user_id !== Auth::id()) {
             abort(403);
         }
+
+        // Cleanup: If the post is deleted, its reports and comments must also be deleted.
+        Report::where('post_id', $post->id)->delete();
+        Comment::where('post_id', $post->id)->delete();
 
         $post->delete();
 
         return redirect()->route('posts.index')
             ->with('success', 'Your post has been deleted successfully.');
     }
-}
+}       
