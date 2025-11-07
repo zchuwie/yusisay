@@ -1,19 +1,32 @@
 <x-app-layout>
-    @forelse ($posts as $post)
-        <x-post-card :post="$post" :username="$post->is_anonymous ? 'Anonymous' : $post->user->name" :time="$post->created_at->diffForHumans()" :content="$post->content" :commentsCount="$post->comments->count()"
-            :postId="$post->id" :isOwner="Auth::check() && Auth::id() === $post->user_id" />
-    @empty
-        <p class="text-gray-500 mt-10">No one posted anything yet.</p>
-    @endforelse
+    <div class="max-w-2xl mx-auto px-4">
+        {{-- Centered container --}}
+        @forelse ($posts as $post)
+            <x-post-card :post="$post" :username="$post->is_anonymous ? 'Anonymous' : $post->user->name" :time="$post->created_at->diffForHumans()" :content="$post->content" :commentsCount="$post->comments->count()"
+                :postId="$post->id" :isOwner="Auth::check() && Auth::id() === $post->user_id" />
+        @empty
+            <p class="text-gray-500 mt-10 text-center">
+                No one posted anything yet.
+            </p>
+        @endforelse
+
+        @if ($posts->count() > 0)
+            <div class="pt-9 flex justify-center text-gray-500">
+                Congrats! You've reached the end.
+            </div>
+        @endif
+    </div>
 
     @if (Auth::check() && Auth::user()->hasVerifiedEmail())
         <div x-data="{ open: false }">
-            <x-add-post-button @click="open = true" />
+            <div class="fixed bottom-6 right-6 z-50">
+                <x-add-post-button @click="open = true" />
+            </div>
             <x-add-post-modal />
         </div>
     @endif
 </x-app-layout>
- 
+
 @if (session('success'))
     <script>
         document.addEventListener('DOMContentLoaded', () => {

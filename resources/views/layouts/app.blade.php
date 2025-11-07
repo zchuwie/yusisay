@@ -32,8 +32,8 @@
         @endisset
 
         <!-- Page Content -->
-        <div class="min-h-screen bg-gray-100 flex flex-col pt-28 items-center justify-start gap-5">
-            <main>
+        <div class="min-h-screen bg-gray-100 flex flex-col items-center justify-start gap-5">
+            <main class="mt-[110px] mb-[100px]">
                 {{ $slot }} 
             </main>
         </div>
