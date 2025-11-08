@@ -3,11 +3,14 @@
 namespace App\Http\Controllers;
 
 use App\Models\Comment;
+use App\Traits\ChecksCensoredWords;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class CommentController extends Controller
 {
+    use ChecksCensoredWords;
+
     public function store(Request $request)
     {
         $request->validate([
@@ -15,6 +18,16 @@ class CommentController extends Controller
             'content' => 'required|min:1|max:1000',
             'is_anonymous' => 'boolean'
         ]);
+ 
+        $censorCheck = $this->containsCensoredWord($request->input('content'));
+
+        if ($censorCheck['found']) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'content' => 'Your comment contains inappropriate content. Please remove it and try again.'
+                ]);
+        }
 
         Comment::create([
             'post_id' => $request->input('post_id'),
@@ -27,7 +40,7 @@ class CommentController extends Controller
     }
 
     public function destroy(Comment $comment)
-    { 
+    {
         if (Auth::id() !== $comment->user_id) {
             return redirect()->back()->with('error', 'You are not authorized to delete this comment.');
         }

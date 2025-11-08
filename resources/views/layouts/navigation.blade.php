@@ -13,14 +13,26 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-[80px]">
 
-
             <div class="shrink-0 flex items-center">
-                <div class="w-10 h-10 bg-[#FF9013] rounded-lg flex items-center justify-center">
-                    <span class="text-white font-bold text-lg">L</span>
-                </div>
+                <a href="{{ route('posts.index') }}" class="block">
+                    <h1 class="text-3xl leading-[1.6] pt-2 pb-2 relative"
+                        style="
+          font-family: 'Pacifico', cursive;
+          font-weight: 400;
+          background: linear-gradient(135deg, #FF9013 0%, #FF6B6B 100%);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+          color: transparent;
+          display: inline-block;
+          transform: translateY(-4px);
+        ">
+                        Yusisay
+                    </h1>
+                </a>
             </div>
 
-
+            <!-- Navigation Links -->
             <div class="flex justify-center gap-6 flex-1">
 
                 <div class="relative py-3 px-6 cursor-pointer group transition-all rounded-xl duration-200
@@ -117,6 +129,7 @@
                 </div>
             </div>
 
+            <!-- User Dropdown -->
             <div class="flex items-center sm:ms-6">
                 <div class="hidden sm:flex">
                     <x-dropdown align="right" width="48">
@@ -166,6 +179,7 @@
         </div>
     </div>
 
+    <!-- Mobile Menu -->
     <div :class="{ 'block': open, 'hidden': !open }" class="hidden sm:hidden bg-[#FAFAFA] border-t border-gray-200">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('posts.index')" :active="request()->routeIs('posts.index')">Posts</x-responsive-nav-link>

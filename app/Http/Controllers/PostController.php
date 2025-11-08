@@ -3,21 +3,23 @@
 namespace App\Http\Controllers;
 
 use App\Models\Post;
-use App\Models\Report; // Added for cleanup
-use App\Models\Comment; // Added for cleanup
+use App\Models\Report;
+use App\Models\Comment;
+use App\Traits\ChecksCensoredWords;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
+    use ChecksCensoredWords;
+
     public function index()
     {
         $posts = Post::with(['user', 'comments.user'])
-            ->where('is_hidden', false) // Add this line
+            ->where('is_hidden', false)
             ->latest()->get();
         return view('posts.index', compact('posts'));
     }
-
 
     public function store(Request $request)
     {
@@ -25,6 +27,16 @@ class PostController extends Controller
             'content' => 'required|string|max:1000',
             'is_anonymous' => 'boolean',
         ]);
+ 
+        $censorCheck = $this->containsCensoredWord($validated['content']);
+
+        if ($censorCheck['found']) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors([
+                    'content' => 'Your post contains inappropriate content. Please remove it and try again.'
+                ]);
+        }
 
         $post = Post::create([
             'user_id' => Auth::id(),
@@ -49,21 +61,18 @@ class PostController extends Controller
     public function show($id)
     {
         $post = Post::with(['comments' => function ($query) {
-            $query->latest(); // same as ->orderBy('created_at', 'desc')
+            $query->latest();
         }, 'comments.user', 'user'])->findOrFail($id);
 
         return view('posts.show', compact('post'));
     }
 
-
     public function destroy(Post $post)
     {
-        // Owner check: Ensure only owner can delete (or an admin via separate route/check)
         if ($post->user_id !== Auth::id()) {
             abort(403);
         }
 
-        // Cleanup: If the post is deleted, its reports and comments must also be deleted.
         Report::where('post_id', $post->id)->delete();
         Comment::where('post_id', $post->id)->delete();
 
@@ -72,4 +81,4 @@ class PostController extends Controller
         return redirect()->route('posts.index')
             ->with('success', 'Your post has been deleted successfully.');
     }
-}       
+}
