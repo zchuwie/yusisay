@@ -487,6 +487,13 @@
                     </div>
 
                     @if (Auth::check() && Auth::user()->hasVerifiedEmail())
+
+                        @if ($errors->has('content'))
+                            <div class="w-full mb-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+                                <p class="text-sm text-red-600 font-medium">{{ $errors->first('content') }}</p>
+                            </div>
+                        @endif
+                        
                         <form action="{{ route('comments.store') }}" method="POST" x-data="{ content: '', isAnonymous: false }"
                             id="commentForm" @submit.prevent="handleCommentSubmit($el)"
                             class="w-full h-[140px] rounded-[16px] bg-[#ededed] px-[16px] pt-[16px] mt-[16px] flex flex-col">

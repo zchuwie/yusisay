@@ -1,5 +1,5 @@
 <x-app-layout>
-    <div class="max-w-2xl mx-auto px-4"> 
+    <div class="max-w-2xl mx-auto px-4">
 
         @if (Auth::check() && Auth::user()->hasVerifiedEmail())
             <div class="bg-[#FAFAFA] rounded-2xl shadow border border-gray-100 mb-6 overflow-hidden">
@@ -14,14 +14,20 @@
                 <form method="POST" action="{{ route('posts.store') }}" @submit="open = false" class="p-5">
                     @csrf
 
- 
+                    @if ($errors->has('content'))
+                        <div class="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl">
+                            <p class="text-sm text-red-600 font-medium">{{ $errors->first('content') }}</p>
+                        </div>
+                    @endif
+
+
                     <div class="relative">
                         <textarea name="content" id="message" rows="4" required minlength="1"
                             class="block p-4 w-full text-sm text-gray-800 bg-[#FAFAFA] rounded-xl border border-gray-200 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all resize-none"
                             placeholder="Spill it out! Share what's on your mind..."></textarea>
                     </div>
 
- 
+
                     <div class="flex flex-row justify-between items-center w-full mt-4 pt-4 border-t border-gray-100">
                         <label class="inline-flex items-center cursor-pointer group">
                             <input type="checkbox" name="is_anonymous" value="1" class="sr-only peer">
@@ -35,7 +41,7 @@
                                 <p class="text-[14px] text-gray-500">Your identity will be hidden</p>
                             </div>
                         </label>
- 
+
                         <button type="submit" x-ref="submitBtn"
                             class="flex items-center gap-2 text-white bg-[#FF9013] font-semibold rounded-xl text-sm px-6 py-3 shadow">
                             Post Now
@@ -121,7 +127,7 @@
             <span>${message}</span>
         `;
         container.appendChild(toast);
- 
+
         setTimeout(() => {
             toast.style.opacity = '0';
             toast.style.transform = 'translateY(-10px)';
