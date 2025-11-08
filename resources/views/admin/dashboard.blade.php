@@ -2,14 +2,34 @@
     <script src="https://unpkg.com/lucide@latest"></script> 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
-    <x-slot name="header">
-        <div class="flex items-center space-x-2">
-            <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                Dashboard Overview
-            </h2>
-            <span class="text-sm text-gray-500">| Last Update: {{ now()->format('M. d, Y | h:ia') }}</span>
-        </div>
-    </x-slot>
+   <x-slot name="header">
+    <div class="flex items-center space-x-2">
+        <h2 class="font-semibold text-xl text-gray-800 leading-tight">
+            Dashboard Overview
+        </h2>
+        <span class="text-sm text-gray-500" x-data="{ 
+            currentTime: ''
+        }" x-init="
+            const updateTime = () => {
+                const now = new Date();
+                const options = { 
+                    month: 'short', 
+                    day: 'numeric', 
+                    year: 'numeric',
+                    hour: 'numeric',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true
+                };
+                currentTime = now.toLocaleString('en-US', options);
+            };
+            updateTime();
+            setInterval(updateTime, 1000);
+        ">
+            | Last Update: <span x-text="currentTime"></span>
+        </span>
+    </div>
+</x-slot>
 
     <div class="space-y-8 pb-6">
 
@@ -37,6 +57,11 @@
                 </div>
             </div>
 
+            @php
+                $newUsersChange = $dashboardData['newUsersChange'] ?? 0;
+                $newUsersColor = $newUsersChange >= 0 ? 'text-green-500' : 'text-red-500';
+                $newUsersArrow = $newUsersChange >= 0 ? '<i data-lucide="arrow-up" class="w-4 h-4 mr-0.5"></i>' : '<i data-lucide="arrow-down" class="w-4 h-4 mr-0.5"></i>';
+            @endphp
             <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
                 <div class="flex items-start justify-between">
                     <div class="flex items-start space-x-3">
@@ -48,12 +73,17 @@
                             <p class="text-sm text-gray-500">New Users (Week)</p>
                         </div>
                     </div>
-                    <span class="text-sm text-green-500 font-semibold flex items-center mt-1">
-                        <i data-lucide="arrow-up" class="w-4 h-4 mr-0.5"></i> 7%
+                    <span class="text-sm font-semibold flex items-center mt-1 {{ $newUsersColor }}">
+                        {!! $newUsersArrow !!} {{ abs($newUsersChange) }}%
                     </span>
                 </div>
             </div>
 
+            @php
+                $activeReportsChange = $dashboardData['activeReportsChange'] ?? 0;
+                $activeReportsColor = $activeReportsChange >= 0 ? 'text-red-500' : 'text-green-500';
+                $activeReportsArrow = $activeReportsChange >= 0 ? '<i data-lucide="arrow-up" class="w-4 h-4 mr-0.5"></i>' : '<i data-lucide="arrow-down" class="w-4 h-4 mr-0.5"></i>';
+            @endphp
             <div class="bg-white p-6 rounded-xl shadow-md border border-gray-100">
                 <div class="flex items-start justify-between">
                     <div class="flex items-start space-x-3">
@@ -65,8 +95,8 @@
                             <p class="text-sm text-gray-500">Active Reports (Pending)</p>
                         </div>
                     </div>
-                    <span class="text-sm text-red-500 font-semibold flex items-center mt-1">
-                        <i data-lucide="arrow-down" class="w-4 h-4 mr-0.5"></i> 2%
+                    <span class="text-sm font-semibold flex items-center mt-1 {{ $activeReportsColor }}">
+                        {!! $activeReportsArrow !!} {{ abs($activeReportsChange) }}%
                     </span>
                 </div>
             </div>
@@ -102,25 +132,52 @@
                     chartLabels: @js($dashboardData['growthData']['labels'] ?? []),
                     chartUsers: @js($dashboardData['growthData']['users'] ?? []),
                     chartPosts: @js($dashboardData['growthData']['posts'] ?? []),
-                    chartInstance: null
+                    chartInstance: null,
+                    loading: false,
+                    async updateChart(period) {
+                        this.filter = period;
+                        this.loading = true;
+                        const url = '/admin/api/growth-data?period=' + period;
+                        console.log('Fetching from:', url);
+                        try {
+                            const response = await fetch(url);
+                            console.log('Response status:', response.status);
+                            if (!response.ok) {
+                                const errorText = await response.text();
+                                console.error('Response error:', errorText);
+                                throw new Error('Network response was not ok: ' + response.status);
+                            }
+                            const data = await response.json();
+                            console.log('Received data:', data);
+                            this.chartLabels = data.labels;
+                            this.chartUsers = data.users;
+                            this.chartPosts = data.posts;
+                            initChart(this.$refs.growthChart, this.chartLabels, this.chartUsers, this.chartPosts, this);
+                        } catch (error) {
+                            console.error('Full error:', error);
+                            alert('Failed to load chart data: ' + error.message);
+                        } finally {
+                            this.loading = false;
+                        }
+                    }
                 }"
                 x-init="$nextTick(() => { 
                     lucide.createIcons(); 
-                    initChart($el.querySelector('canvas'), chartLabels, chartUsers, chartPosts, $data);
+                    initChart($refs.growthChart, chartLabels, chartUsers, chartPosts, $data);
                 })"
             >
                 <div class="flex justify-between items-center">
                     <h3 class="text-xl font-semibold text-gray-800">Platform Growth (Users & Posts)</h3>
                     
                     <div class="inline-flex rounded-md shadow-sm bg-gray-100 p-1">
-                        <button @click="filter = 'week'" :class="filter === 'week' ? 'bg-white text-indigo-700 shadow' : 'text-gray-600 hover:text-indigo-700'" class="py-1 px-3 text-sm font-medium rounded-md transition-colors">
+                        <button @click="updateChart('week')" :disabled="loading" :class="filter === 'week' ? 'bg-white text-indigo-700 shadow' : 'text-gray-600 hover:text-indigo-700'" class="py-1 px-3 text-sm font-medium rounded-md transition-colors disabled:opacity-50">
                             Week
                         </button>
-                        <button @click="filter = 'month'" :class="filter === 'month' ? 'bg-white text-indigo-700 shadow' : 'text-gray-600 hover:text-indigo-700'" class="py-1 px-3 text-sm font-medium rounded-md transition-colors">
-                            Month (Mock)
+                        <button @click="updateChart('month')" :disabled="loading" :class="filter === 'month' ? 'bg-white text-indigo-700 shadow' : 'text-gray-600 hover:text-indigo-700'" class="py-1 px-3 text-sm font-medium rounded-md transition-colors disabled:opacity-50">
+                            Month
                         </button>
-                        <button @click="filter = 'year'" :class="filter === 'year' ? 'bg-white text-indigo-700 shadow' : 'text-gray-600 hover:text-indigo-700'" class="py-1 px-3 text-sm font-medium rounded-md transition-colors">
-                            Year (Mock)
+                        <button @click="updateChart('year')" :disabled="loading" :class="filter === 'year' ? 'bg-white text-indigo-700 shadow' : 'text-gray-600 hover:text-indigo-700'" class="py-1 px-3 text-sm font-medium rounded-md transition-colors disabled:opacity-50">
+                            Year
                         </button>
                     </div>
                 </div>
@@ -131,15 +188,11 @@
             </div>
 
             <div class="lg:col-span-1 bg-white p-6 rounded-xl shadow-md border border-gray-100">
-                <h3 class="text-xl font-semibold text-gray-800 mb-4">Recent Activities</h3>
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Recent Censored Words</h3>
                 <ul class="divide-y divide-gray-100">
                     @forelse ($dashboardData['recentActivities'] ?? [] as $activity)
                         <li class="py-3 flex items-start">
-                            @if (str_contains($activity['description'], 'registered'))
-                                <i data-lucide="user-plus" class="w-4 h-4 mr-3 mt-1 text-green-500 flex-shrink-0"></i>
-                            @else
-                                <i data-lucide="alert-triangle" class="w-4 h-4 mr-3 mt-1 text-red-500 flex-shrink-0"></i>
-                            @endif
+                            <i data-lucide="shield-alert" class="w-4 h-4 mr-3 mt-1 text-red-500 flex-shrink-0"></i>
 
                             <div>
                                 <p class="text-sm text-gray-800 leading-snug">{!! $activity['description'] !!}</p>
@@ -147,11 +200,11 @@
                             </div>
                         </li>
                     @empty
-                        <li class="py-3 text-sm text-gray-500">No recent activity found.</li>
+                        <li class="py-3 text-sm text-gray-500">No recent censored words found.</li>
                     @endforelse
                 </ul>
-                <a href="{{ route('admin.report') ?? '#' }}" class="mt-4 inline-block text-indigo-600 hover:text-indigo-800 text-sm font-medium">
-                    View Full System Logs &rarr;
+                <a href="../admin/reports" class="mt-4 inline-block text-indigo-600 hover:text-indigo-800 text-sm font-medium">
+                    View All Censored Words &rarr;
                 </a>
             </div>
         </div>
@@ -173,20 +226,22 @@
                         {
                             label: 'New Users',
                             data: users,
-                            borderColor: '#8b5cf6', // Indigo
+                            borderColor: '#8b5cf6',
                             backgroundColor: '#8b5cf615',
                             tension: 0.4,
                             fill: true,
-                            pointRadius: 3
+                            pointRadius: 4,
+                            pointHoverRadius: 6
                         }, 
                         {
                             label: 'New Posts',
                             data: posts,
-                            borderColor: '#60a5fa', // Blue
+                            borderColor: '#60a5fa',
                             backgroundColor: 'transparent',
                             tension: 0.4,
                             fill: false,
-                            pointRadius: 3
+                            pointRadius: 4,
+                            pointHoverRadius: 6
                         }
                     ]
                 },
@@ -200,7 +255,10 @@
                     scales: { 
                         y: { 
                             beginAtZero: true,
-                            grid: { color: '#f3f4f6' }
+                            grid: { color: '#f3f4f6' },
+                            ticks: {
+                                precision: 0
+                            }
                         },
                         x: { 
                             grid: { display: false }

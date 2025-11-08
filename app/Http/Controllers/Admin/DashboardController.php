@@ -3,127 +3,259 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\User;
-use App\Models\Post;
 use App\Models\Report;
+use App\Models\Post;
+use App\Models\CensoredWord;
+use Illuminate\Http\Request;
 use Carbon\Carbon;
-use Illuminate\Support\Facades\DB;
 
-class DashboardController extends Controller
+class AdminController extends Controller
 {
-    public function index()
+    /**
+     * Display the Admin Dashboard with summary data.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function dashboard()
     {
-        $now = Carbon::now();
-        $startOfLastWeek = $now->copy()->subDays(7)->startOfDay();
-        $startOfTwoWeeksAgo = $now->copy()->subDays(14)->startOfDay();
-        
-        $totalUsers = User::count();
-        $totalUsersLastWeek = User::where('created_at', '<=', $startOfLastWeek)->count();
-        $totalUsersChange = $this->calculateChangePercentage($totalUsers, $totalUsersLastWeek);
-
-        $newUsersThisWeek = User::where('created_at', '>=', $startOfLastWeek)->count();
-        
-        $activeReports = Report::where('status', 'pending')->count();
-        
-        $resolvedLastWeekCount = Report::whereIn('status', ['approved', 'dismissed'])
-            ->where('reviewed_at', '>=', $startOfLastWeek)
-            ->count();
-
-        $resolvedPrevWeekCount = Report::whereIn('status', ['approved', 'dismissed'])
-            ->whereBetween('reviewed_at', [$startOfTwoWeeksAgo, $startOfLastWeek])
-            ->count();
-        
-        $resolvedReportsChange = $this->calculateChangePercentage($resolvedLastWeekCount, $resolvedPrevWeekCount);
-        $totalResolvedReports = Report::whereIn('status', ['approved', 'dismissed'])->count();
-        
-        $growthData = $this->getWeeklyGrowthData();
-        
-        $recentActivities = $this->getRecentActivities();
-
-        $dashboardData = [
-            'totalUsers' => $totalUsers,
-            'newUsersThisWeek' => $newUsersThisWeek,
-            'activeReports' => $activeReports,
-            'resolvedReports' => $totalResolvedReports,
-            
-            'totalUsersChange' => $totalUsersChange,
-            'resolvedReportsChange' => $resolvedReportsChange,
-
-            'recentActivities' => $recentActivities,
-            'growthData' => $growthData,
-        ];
-
+        $dashboardData = $this->getDashboardData();
         return view('admin.dashboard', compact('dashboardData'));
     }
 
-    protected function calculateChangePercentage($newValue, $baseValue)
+    /**
+     * Display the User Management page.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function user()
     {
-        if ($baseValue == 0) {
-            return $newValue > 0 ? 100 : 0;
-        }
-
-        $change = $newValue - $baseValue;
-        return round(($change / $baseValue) * 100, 1);
+        return view('admin.user');
     }
 
-
-    protected function getWeeklyGrowthData()
+    /**
+     * Display the Reporting & Analytics page.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function report()
     {
-        $days = [];
+        return view('admin.report');
+    }
+
+    /**
+     * Display the Censored Words page.
+     *
+     * @return \Illuminate\View\View
+     */
+    public function censoredWords()
+    {
+        return view('admin.censored-words');
+    }
+
+    /**
+     * API endpoint to get growth data for different time periods.
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getGrowthData(Request $request)
+    {
+        $period = $request->input('period', 'week');
+        $now = Carbon::now();
+        
+        switch ($period) {
+            case 'month':
+                $startDate = $now->copy()->subDays(30);
+                $data = $this->getMonthlyGrowthData($startDate, $now);
+                break;
+            case 'year':
+                $startDate = $now->copy()->subMonths(12);
+                $data = $this->getYearlyGrowthData($startDate, $now);
+                break;
+            default: // week
+                $startDate = $now->copy()->subDays(7);
+                $data = $this->getWeeklyGrowthData($startDate, $now);
+                break;
+        }
+        
+        return response()->json($data);
+    }
+
+    /**
+     * Get real-time dashboard data from database.
+     *
+     * @return array
+     */
+    private function getDashboardData()
+    {
+        $now = Carbon::now();
+        $weekAgo = $now->copy()->subDays(7);
+        $twoWeeksAgo = $now->copy()->subDays(14);
+
+        // Total Users
+        $totalUsers = User::count();
+        $totalUsersLastWeek = User::where('created_at', '<', $weekAgo)->count();
+        $totalUsersChange = $totalUsersLastWeek > 0 
+            ? round((($totalUsers - $totalUsersLastWeek) / $totalUsersLastWeek) * 100, 1) 
+            : ($totalUsers > 0 ? 100 : 0);
+
+        // New Users This Week
+        $newUsersThisWeek = User::where('created_at', '>=', $weekAgo)->count();
+        $newUsersPreviousWeek = User::whereBetween('created_at', [$twoWeeksAgo, $weekAgo])->count();
+        $newUsersChange = $newUsersPreviousWeek > 0 
+            ? round((($newUsersThisWeek - $newUsersPreviousWeek) / $newUsersPreviousWeek) * 100, 1) 
+            : ($newUsersThisWeek > 0 ? 100 : 0);
+
+        // Active Reports (Pending)
+        $activeReports = Report::where('status', 'pending')->count();
+        $activeReportsLastWeek = Report::where('status', 'pending')
+            ->where('created_at', '<', $weekAgo)
+            ->count();
+        $activeReportsChange = $activeReportsLastWeek > 0 
+            ? round((($activeReports - $activeReportsLastWeek) / $activeReportsLastWeek) * 100, 1) 
+            : ($activeReports > 0 ? 100 : 0);
+
+        // Resolved Reports (Not Pending)
+        $resolvedReports = Report::where('status', '!=', 'pending')->count();
+        $resolvedReportsLastWeek = Report::where('status', '!=', 'pending')
+            ->where('updated_at', '<', $weekAgo)
+            ->count();
+        $resolvedReportsChange = $resolvedReportsLastWeek > 0 
+            ? round((($resolvedReports - $resolvedReportsLastWeek) / $resolvedReportsLastWeek) * 100, 1) 
+            : ($resolvedReports > 0 ? 100 : 0);
+
+        // Growth Data for Chart (Last 7 Days)
+        $growthData = $this->getWeeklyGrowthData($weekAgo, $now);
+
+        // Recent Censored Words (Last 5)
+        $recentCensoredWords = CensoredWord::orderBy('created_at', 'desc')
+            ->limit(5)
+            ->get()
+            ->map(function ($word) {
+                return [
+                    'description' => 'New censored word added: <strong>' . e($word->word) . '</strong>',
+                    'time' => $word->created_at->diffForHumans(),
+                ];
+            });
+
+        return [
+            'totalUsers' => $totalUsers,
+            'totalUsersChange' => $totalUsersChange,
+            'newUsersThisWeek' => $newUsersThisWeek,
+            'newUsersChange' => $newUsersChange,
+            'activeReports' => $activeReports,
+            'activeReportsChange' => $activeReportsChange,
+            'resolvedReports' => $resolvedReports,
+            'resolvedReportsChange' => $resolvedReportsChange,
+            'growthData' => $growthData,
+            'recentActivities' => $recentCensoredWords,
+        ];
+    }
+
+    /**
+     * Get weekly growth data for chart (users and posts per day).
+     *
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return array
+     */
+    private function getWeeklyGrowthData($startDate, $endDate)
+    {
+        $labels = [];
         $users = [];
         $posts = [];
-        $today = Carbon::today();
 
+        // Generate data for each day in the past week
         for ($i = 6; $i >= 0; $i--) {
-            $date = $today->copy()->subDays($i);
-            $nextDay = $date->copy()->addDay();
-            
-            $days[] = $date->format('M d');
+            $date = $endDate->copy()->subDays($i);
+            $labels[] = $date->format('M d');
 
-            $users[] = User::whereBetween('created_at', [$date, $nextDay])->count();
-            $posts[] = Post::whereBetween('created_at', [$date, $nextDay])->count();
+            // Count users created on this day
+            $userCount = User::whereDate('created_at', $date->toDateString())->count();
+            $users[] = $userCount;
+
+            // Count posts created on this day
+            $postCount = Post::whereDate('created_at', $date->toDateString())->count();
+            $posts[] = $postCount;
         }
 
         return [
-            'labels' => $days,
+            'labels' => $labels,
             'users' => $users,
             'posts' => $posts,
         ];
     }
 
-    protected function getRecentActivities()
+    /**
+     * Get monthly growth data for chart (users and posts per day for last 30 days).
+     *
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return array
+     */
+    private function getMonthlyGrowthData($startDate, $endDate)
     {
-        $newUsers = User::orderBy('created_at', 'desc')->take(5)
-            ->get(['id', 'name', 'created_at'])
-            ->map(function ($user) {
-                return [
-                    'description' => "User **{$user->name} (ID: {$user->id})** registered.",
-                    'time' => $user->created_at->diffForHumans(),
-                    'timestamp' => $user->created_at,
-                ];
-            });
+        $labels = [];
+        $users = [];
+        $posts = [];
 
-        $newReports = Report::with('user:id,name', 'post:id')
-            ->orderBy('created_at', 'desc')->take(5)
-            ->get(['id', 'user_id', 'post_id', 'status', 'created_at'])
-            ->map(function ($report) {
-                $statusText = $report->status === 'pending' ? 'submitted' : 'reviewed';
-                $reporter = $report->user ? "by {$report->user->name} (ID: {$report->user_id})" : '(Deleted User)';
-                
-                return [
-                    'description' => "Report **#{$report->id}** on Post #{$report->post_id} {$statusText} {$reporter}.",
-                    'time' => $report->created_at->diffForHumans(),
-                    'timestamp' => $report->created_at,
-                ];
-            });
-            
-        $activities = $newUsers->merge($newReports)
-            ->sortByDesc('timestamp')
-            ->take(10) 
-            ->values()
-            ->toArray();
+        // Generate data for every 3 days in the past month (to keep chart readable)
+        for ($i = 30; $i >= 0; $i -= 3) {
+            $date = $endDate->copy()->subDays($i);
+            $labels[] = $date->format('M d');
 
-        return $activities;
+            // Count users created on this day
+            $userCount = User::whereDate('created_at', $date->toDateString())->count();
+            $users[] = $userCount;
+
+            // Count posts created on this day
+            $postCount = Post::whereDate('created_at', $date->toDateString())->count();
+            $posts[] = $postCount;
+        }
+
+        return [
+            'labels' => $labels,
+            'users' => $users,
+            'posts' => $posts,
+        ];
+    }
+
+    /**
+     * Get yearly growth data for chart (users and posts per month for last 12 months).
+     *
+     * @param Carbon $startDate
+     * @param Carbon $endDate
+     * @return array
+     */
+    private function getYearlyGrowthData($startDate, $endDate)
+    {
+        $labels = [];
+        $users = [];
+        $posts = [];
+
+        // Generate data for each month in the past year
+        for ($i = 11; $i >= 0; $i--) {
+            $date = $endDate->copy()->subMonths($i);
+            $labels[] = $date->format('M Y');
+
+            // Count users created in this month
+            $userCount = User::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+            $users[] = $userCount;
+
+            // Count posts created in this month
+            $postCount = Post::whereYear('created_at', $date->year)
+                ->whereMonth('created_at', $date->month)
+                ->count();
+            $posts[] = $postCount;
+        }
+
+        return [
+            'labels' => $labels,
+            'users' => $users,
+            'posts' => $posts,
+        ];
     }
 }

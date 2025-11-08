@@ -16,7 +16,8 @@ use Illuminate\Support\Facades\Auth;
 class ReportController extends Controller
 {
     public function index(Request $request)
-    {
+{
+    try {
         $perPage = intval($request->get('per_page', 10));
         $page = intval($request->get('page', 1));
         $search = $request->get('search', null);
@@ -26,49 +27,41 @@ class ReportController extends Controller
 
         // Handle resolved reports
         if ($showResolved) {
-            // Group by post_id and get the latest report for each post
             $query = Report::select(
-                    'post_id',
-                    DB::raw('MAX(id) as latest_report_id'),
+                    'reports.post_id',
+                    DB::raw('MAX(reports.id) as latest_report_id'),
                     DB::raw('COUNT(*) as total_reports'),
-                    DB::raw('MAX(reviewed_at) as reviewed_at'),
-                    DB::raw('MAX(status) as status')
+                    DB::raw('MAX(reports.reviewed_at) as reviewed_at'),
+                    DB::raw('MAX(reports.status) as status')
                 )
-                ->whereIn('status', [Report::STATUS_APPROVED, Report::STATUS_DISMISSED])
-                ->groupBy('post_id');
+                ->whereIn('reports.status', [Report::STATUS_APPROVED, Report::STATUS_DISMISSED])
+                ->groupBy('reports.post_id');
 
-            // Add search filter
+            // Join posts table if needed for search
             if ($search) {
-                $query->join('posts', 'posts.id', '=', 'reports.post_id')
-                     ->where(function($q) use ($search) {
-                         $q->where('posts.title', 'like', '%' . $search . '%')
-                           ->orWhere('posts.content', 'like', '%' . $search . '%');
-                     });
+                $query->leftJoin('posts', 'posts.id', '=', 'reports.post_id')
+                      ->where(function($q) use ($search) {
+                          $q->where('posts.content', 'like', '%' . $search . '%')
+                            ->orWhere('reports.post_id', 'like', '%' . $search . '%');
+                      });
             }
 
             // Add sorting
             if ($sortBy === 'total_reports') {
                 $query->orderBy('total_reports', $sortDir);
-            } elseif ($sortBy === 'title') {
-                if (!$search) {
-                    $query->join('posts', 'posts.id', '=', 'reports.post_id');
-                }
-                $query->orderBy('posts.title', $sortDir);
             } elseif ($sortBy === 'post_id') {
-                $query->orderBy('post_id', $sortDir);
+                $query->orderBy('reports.post_id', $sortDir);
             } else {
                 $query->orderBy('reviewed_at', 'desc');
             }
 
-            // Paginate
             $paginator = $query->paginate($perPage, ['*'], 'page', $page);
 
-            // Transform the results
             $items = $paginator->getCollection()->map(function($row) {
                 $post = Post::find($row->post_id);
                 if (!$post) return null;
 
-                $title = $post->title ?? Str::limit(strip_tags($post->content), 60);
+                $title = Str::limit(strip_tags($post->content), 60);
                 $censoredPreview = $post->censored_content ?? Str::limit(strip_tags($post->content), 100);
 
                 $author = $post->is_anonymous 
@@ -93,23 +86,22 @@ class ReportController extends Controller
             return response()->json($paginator);
         }
 
-        // Handle pending reports - GROUP BY post_id
-        $base = Report::query()
-            ->select(
-                'post_id', 
+        // Handle pending reports
+        $base = Report::select(
+                'reports.post_id', 
                 DB::raw('COUNT(*) as total_reports'), 
-                DB::raw('MAX(created_at) as latest_report_at'), 
-                DB::raw('MIN(created_at) as oldest_report_at')
+                DB::raw('MAX(reports.created_at) as latest_report_at'), 
+                DB::raw('MIN(reports.created_at) as oldest_report_at')
             )
-            ->where('status', Report::STATUS_PENDING)
-            ->groupBy('post_id');
+            ->where('reports.status', Report::STATUS_PENDING)
+            ->groupBy('reports.post_id');
 
-        // Add search filter
+        // Join posts table if needed for search
         if ($search) {
-            $base->join('posts', 'posts.id', '=', 'reports.post_id')
+            $base->leftJoin('posts', 'posts.id', '=', 'reports.post_id')
                  ->where(function($q) use ($search) {
-                     $q->where('posts.title', 'like', '%' . $search . '%')
-                       ->orWhere('posts.content', 'like', '%' . $search . '%');
+                     $q->where('posts.content', 'like', '%' . $search . '%')
+                       ->orWhere('reports.post_id', 'like', '%' . $search . '%');
                  });
         }
 
@@ -117,25 +109,18 @@ class ReportController extends Controller
         if (in_array($sortBy, ['total_reports', 'latest_report_at', 'oldest_report_at'])) {
             $base->orderBy($sortBy, $sortDir);
         } elseif ($sortBy === 'post_id') {
-            $base->orderBy('post_id', $sortDir);
-        } elseif ($sortBy === 'title') {
-            if (!$search) {
-                $base->join('posts', 'posts.id', '=', 'reports.post_id');
-            }
-            $base->orderBy('posts.title', $sortDir);
+            $base->orderBy('reports.post_id', $sortDir);
         } else {
             $base->orderBy('total_reports', 'desc');
         }
 
-        // Paginate
         $paginator = $base->paginate($perPage, ['*'], 'page', $page);
 
-        // Transform the results
         $items = $paginator->getCollection()->map(function($row) {
             $post = Post::find($row->post_id);
             if (!$post) return null;
 
-            $title = $post->title ?? Str::limit(strip_tags($post->content), 60);
+            $title = Str::limit(strip_tags($post->content), 60);
             $censoredPreview = $post->censored_content ?? Str::limit(strip_tags($post->content), 100);
 
             if ($post->is_anonymous) {
@@ -145,7 +130,6 @@ class ReportController extends Controller
                 $author = $user ? ($user->name ?? $user->username ?? 'User') : 'User';
             }
 
-            // Get all reports for this post
             $reportModels = Report::where('post_id', $row->post_id)
                 ->where('status', Report::STATUS_PENDING)
                 ->orderBy('created_at', 'desc')
@@ -181,7 +165,20 @@ class ReportController extends Controller
         $paginator->setCollection($items);
 
         return response()->json($paginator);
+
+    } catch (\Exception $e) {
+        Log::error('Report Index Error', [
+            'message' => $e->getMessage(),
+            'file' => $e->getFile(),
+            'line' => $e->getLine()
+        ]);
+
+        return response()->json([
+            'error' => 'Failed to load reports',
+            'message' => $e->getMessage()
+        ], 500);
     }
+}
 
     public function approve($postId, Request $request)
     {
