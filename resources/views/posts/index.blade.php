@@ -49,7 +49,7 @@
                     </div>
                 </form>
             </div>
-            <p class="block text-[16px] font-semibold text-gray-800 mb-4">
+            <p class="block text-[18px] font-semibold text-gray-800 mb-4">
                 Your Feed
             </p>
             <div class="flex flex-col justify-start items-center">
@@ -69,6 +69,8 @@
                     Congrats! You've reached the end.
                 </div>
             @endif
+
+                <x-go-to-top></x-go-to-top>
         @else
             <div class="rounded-xl mt-6 mb-4 shadow overflow-hidden">
                 <div class="bg-[#FF9013] p-4 ">
@@ -134,5 +136,24 @@
             toast.style.transform = 'translateY(-10px)';
             setTimeout(() => toast.remove(), 300);
         }, duration);
+    }
+
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+
+    window.addEventListener('scroll', () => {
+        if (window.scrollY > 300) {
+            scrollToTopBtn.classList.remove('opacity-0', 'invisible');
+            scrollToTopBtn.classList.add('opacity-100', 'visible');
+        } else {
+            scrollToTopBtn.classList.add('opacity-0', 'invisible');
+            scrollToTopBtn.classList.remove('opacity-100', 'visible');
+        }
+    });
+
+    function scrollToTop() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
     }
 </script>
