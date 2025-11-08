@@ -31,9 +31,9 @@
                 <div class="sm:flex sm:items-start">
                     <div class="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full"
                          :class="{
-                            'bg-indigo-100 text-indigo-600': modalType === 'view' || modalType === 'edit',
-                            'bg-red-100 text-red-600': modalType === 'delete-confirm'
-                         }">
+                             'bg-indigo-100 text-indigo-600': modalType === 'view' || modalType === 'edit',
+                             'bg-red-100 text-red-600': modalType === 'delete-confirm'
+                           }">
                         <i :data-lucide="modalType === 'delete-confirm' ? 'alert-triangle' : (modalType === 'edit' ? 'square-pen' : 'user')" class="w-6 h-6 action-icon"></i>
                     </div>
                     <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
@@ -54,15 +54,18 @@
                         <div x-show="modalType === 'edit'" class="mt-4 space-y-4">
                             <div>
                                 <label for="edit_name" class="block text-sm font-medium text-gray-700">Full Name</label>
-                                <input type="text" x-model="selectedUser.name" id="edit_name"
-                                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <input type="text" x-model="editForm.name" id="edit_name"
+                                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            :class="{'border-red-500': errors.name}">
+                                <p x-show="errors.name" x-text="errors.name?.[0]" class="mt-1 text-sm text-red-600"></p>
                             </div>
                             <div>
                                 <label for="edit_email" class="block text-sm font-medium text-gray-700">E-Mail</label>
-                                <input type="email" x-model="selectedUser.email" id="edit_email"
-                                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm">
+                                <input type="email" x-model="editForm.email" id="edit_email"
+                                            class="mt-1 block w-full rounded-lg border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                                            :class="{'border-red-500': errors.email}">
+                                <p x-show="errors.email" x-text="errors.email?.[0]" class="mt-1 text-sm text-red-600"></p>
                             </div>
-                            <p class="text-xs text-gray-500 mt-2">Note: Changes made here are simulated and require a backend API call to persist.</p>
                         </div>
 
                         {{-- DELETE CONFIRMATION MODE --}}
@@ -79,20 +82,27 @@
 
             {{-- Modal Footer Buttons --}}
             <div x-show="selectedUser" class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                <button x-show="modalType === 'edit'" type="button" @click="saveEdit()"
-                    class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150">
-                    <span x-show="loading" class="mr-2"><i data-lucide="loader-2" class="w-4 h-4 inline-block animate-spin action-icon"></i></span>
+                <button x-show="modalType === 'edit'" type="button" 
+                        @click="saveEdit()"
+                        :disabled="modalLoading" {{-- Correctly disabled here --}}
+                        class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 disabled:opacity-50">
+                    {{-- FIX: Use modalLoading to show the spinner --}}
+                    <span x-show="modalLoading" class="mr-2"><i data-lucide="loader-2" class="w-4 h-4 inline-block animate-spin action-icon"></i></span>
                     Save Changes
                 </button>
                 
-                <button x-show="modalType === 'delete-confirm'" type="button" @click="confirmDelete()"
-                    class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150">
-                    <span x-show="loading" class="mr-2"><i data-lucide="loader-2" class="w-4 h-4 inline-block animate-spin action-icon"></i></span>
+                <button x-show="modalType === 'delete-confirm'" type="button" 
+                        @click="confirmDelete()"
+                        :disabled="modalLoading" {{-- Correctly disabled here --}}
+                        class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 disabled:opacity-50">
+                    {{-- FIX: Use modalLoading to show the spinner --}}
+                    <span x-show="modalLoading" class="mr-2"><i data-lucide="loader-2" class="w-4 h-4 inline-block animate-spin action-icon"></i></span>
                     Delete Permanently
                 </button>
 
                 <button type="button" @click="isModalOpen = false"
-                    class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150">
+                        :disabled="modalLoading" {{-- Added disabling during operation --}}
+                        class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 disabled:opacity-50">
                     <span x-text="modalType === 'view' ? 'Close' : 'Cancel'">Cancel</span>
                 </button>
             </div>
@@ -100,3 +110,36 @@
     </div>
 </div>
 {{-- END MODAL STRUCTURE --}}
+
+---
+
+## ✅ Action Required in JavaScript
+
+Since you are using a new `modalType: 'view'`, make sure you update your `openModal` function in your **JavaScript** to handle the new action:
+
+```javascript
+// Inside your usersTable Alpine.data function:
+
+// ...
+
+// --- Modal Actions ---
+openModal(action, user) {
+    this.selectedUser = JSON.parse(JSON.stringify(user)); // Deep clone
+    this.modalType = action;
+    this.errors = {};
+    
+    if (action === 'edit') {
+        this.editForm = {
+            name: user.name,
+            email: user.email
+        };
+    }
+    // Added: Make sure 'view' doesn't try to set editForm
+    if (action === 'view') {
+        // No action needed other than setting selectedUser and modalType
+    }
+    
+    this.isModalOpen = true;
+},
+
+// ...
