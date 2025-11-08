@@ -16,14 +16,12 @@
     <form method="post" action="{{ route('profile.update') }}" class="mt-6 space-y-6">
         @csrf
         @method('patch')
-
-        <!-- Profile Picture Selection -->
+ 
         <div class="space-y-4">
             <label class="block text-sm font-semibold text-gray-700">
                 {{ __('Profile Picture') }}
             </label>
-
-            <!-- Current Profile Picture Display with Card -->
+ 
             <div
                 class="flex items-center gap-5 p-5 bg-gradient-to-r from-orange-50 to-amber-50 rounded-2xl border-2 border-orange-100">
                 @if ($user->userInfo && $user->userInfo->profile_picture)
@@ -41,8 +39,7 @@
                     <p class="text-sm text-gray-600 mt-1">Choose your profile picture below</p>
                 </div>
             </div>
-
-            <!-- Profile Picture Options Grid -->
+ 
             <div>
                 <p class="text-[14px] font-bold text-gray-600 mb-3 tracking-wide">Available Pictures</p>
 
@@ -57,8 +54,7 @@
                                 class="relative w-full aspect-square rounded-full overflow-hidden border-4 border-gray-200 peer-checked:border-[#FF9013] peer-checked:shadow-lg peer-checked:scale-105 transition-all duration-300 hover:scale-105 hover:border-orange-300 group-hover:shadow-md">
                                 <img src="{{ asset('/assets/pfp' . $i . '.jpg') }}"
                                     alt="Profile Picture {{ $i }}" class="w-full h-full object-cover">
-
-                                <!-- Checkmark overlay when selected -->
+ 
                                 <div
                                     class="absolute inset-0 bg-[#FF9013]/20 opacity-0 peer-checked:opacity-100 transition-opacity flex items-center justify-center">
                                     <svg class="w-8 h-8 text-white drop-shadow-lg" fill="currentColor"
@@ -69,8 +65,7 @@
                                     </svg>
                                 </div>
                             </div>
-
-                            <!-- Hover label -->
+ 
                             <div
                                 class="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <span class="text-xs bg-gray-900 text-white px-2 py-1 rounded whitespace-nowrap">Option
@@ -78,8 +73,7 @@
                             </div>
                         </label>
                     @endfor
-
-                    <!-- Option to remove profile picture -->
+ 
                     <label class="cursor-pointer group relative">
                         <input type="radio" name="profile_picture" value="" x-model="selected"
                             class="sr-only peer"
@@ -93,8 +87,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
                             </svg>
                         </div>
-
-                        <!-- Hover label -->
+ 
                         <div
                             class="absolute -bottom-6 left-1/2 -translate-x-1/2 opacity-0 group-hover:opacity-100 transition-opacity">
                             <span class="text-xs bg-gray-900 text-white px-2 py-1 rounded whitespace-nowrap">Use
@@ -103,8 +96,7 @@
                     </label>
                 </div>
             </div>
-
-            <!-- Info text -->
+ 
             <div class="flex items-start gap-2 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                 <svg class="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                     <path fill-rule="evenodd"

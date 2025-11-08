@@ -64,8 +64,7 @@
                                             @endif
                                         </div>
                                     </div>
-
-                                    {{-- Latest Messages sa gedli --}}
+ 
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center justify-between mb-1">
                                             <h3 class="text-sm font-semibold text-gray-900 truncate">
@@ -87,8 +86,7 @@
                                             <p class="text-xs text-gray-400 italic recent-message">No messages yet</p>
                                         @endif
                                     </div>
-
-                                    <!-- Unread Badge -->
+ 
                                     @if ($unreadCount > 0)
                                         <div class="flex-shrink-0">
                                             <span
@@ -128,11 +126,9 @@
                         </div>
 
                     </div>
-
-                    <!-- Messages Section -->
+ 
                     <div id="messages" class="flex-1 overflow-y-auto p-6 bg-gray-50 flex flex-col gap-2"></div>
-
-                    <!-- Typing Indicator -->
+ 
                     <div id="typingIndicator" class="px-6 py-2 hidden">
                         <div class="flex items-center gap-2 text-gray-500 text-sm">
                             <div class="flex gap-1">
