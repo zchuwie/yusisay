@@ -27,7 +27,7 @@ class PostController extends Controller
             'content' => 'required|string|max:1000',
             'is_anonymous' => 'boolean',
         ]);
- 
+
         $censorCheck = $this->containsCensoredWord($validated['content']);
 
         if ($censorCheck['found']) {
@@ -52,6 +52,7 @@ class PostController extends Controller
     {
         $posts = Post::with(['user.userInfo', 'comments'])
             ->where('user_id', Auth::id())
+            ->where('is_hidden', false)
             ->latest()
             ->get();
 
