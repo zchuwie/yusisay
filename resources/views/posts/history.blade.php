@@ -3,12 +3,7 @@
         <x-verify-card></x-verify-card>
     @else
         <div class="max-w-2xl mx-auto px-4">
-            <div class="bg-[#FF9013] rounded-2xl shadow mb-6 p-4">
-                <div>
-                    <h2 class="text-lg font-bold text-white">History</h2>
-                    <p class="text-orange-100 text-[14px]   ">All your posts will appear here.</p>
-                </div>
-            </div>
+            <x-content-header title="History" description="All your posts will appear here."></x-content-header> 
             @forelse ($posts as $post)
                 <x-post-card :post="$post" :username="$post->is_anonymous ? 'Anonymous' : $post->user->name" :time="$post->created_at->diffForHumans()" :content="$post->content" :commentsCount="$post->comments->count()"
                     :postId="$post->id" :isOwner="Auth::check() && Auth::id() === $post->user_id" />
