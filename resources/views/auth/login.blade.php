@@ -30,12 +30,7 @@
             <x-input-error :messages="$errors->get('password')" class="mt-2" />
         </div>
  
-        <div class="flex mt-6 w-full justify-between items-center gap-3 flex-wrap">
-            <label for="remember_me" class="inline-flex items-center cursor-pointer">
-                <input id="remember_me" type="checkbox" class="w-4 h-4 rounded border-gray-300 text-orange-500 shadow-sm focus:ring-orange-500 focus:ring-2 cursor-pointer" name="remember">
-                <span class="ms-2 text-sm text-gray-600 font-medium">{{ __('Remember me') }}</span>
-            </label>
-
+        <div class="flex mt-6 w-full justify-between items-center gap-3 flex-wrap"> 
             <p class="text-sm text-gray-600">Not yet registered? <a href="{{ route('register') }}" class="font-semibold text-orange-500 hover:text-orange-600 transition-colors">Click here.</a></p>
         </div>
 

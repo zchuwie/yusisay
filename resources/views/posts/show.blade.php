@@ -119,13 +119,7 @@
                                     <div class="flex items-center gap-2">
                                         <span class="font-semibold text-gray-900 text-sm">
                                             {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}
-                                        </span>
-                                        @if ($isOwner)
-                                            <span
-                                                class="px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 rounded-full">
-                                                You
-                                            </span>
-                                        @endif
+                                        </span> 
                                     </div>
                                     <span class="text-xs text-gray-500">
                                         {{ $post->created_at->diffForHumans() }}
