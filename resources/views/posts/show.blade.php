@@ -6,12 +6,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>{{ __('Post #' . $post->id) }}</title>
-
-    {{-- Font --}}
+ 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-
-    {{-- Vite --}}
+ 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -69,6 +67,7 @@
             animation: slideOut 0.3s ease-out;
         }
     </style>
+    
 </head>
 
 
@@ -111,6 +110,8 @@
                 }" x-init="checkHeight"
                     class="relative bg-[#fafafa] border border-[#dddddd] p-[20px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-2">
                     <div class="w-full flex flex-col justify-center gap-[10px]">
+
+
                         <div class="flex justify-between items-center w-full">
                             <div class="flex items-center gap-3 flex-1">
                                 <x-user-avatar :user="$post->user" :isAnonymous="$post->is_anonymous" />
@@ -125,7 +126,9 @@
                                         {{ $post->created_at->diffForHumans() }}
                                     </span>
                                 </div>
+
                             </div>
+                            
                             <div class="flex justify-end items-center">
 
                                 <div class="ml-[20px] mt-[2px] self-center relative" x-data="{ open: false, showReportModal: false, showDeleteModal: false, reason: '' }">
