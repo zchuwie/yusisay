@@ -48,7 +48,8 @@
                                 @endphp
 
                                 <li class="cursor-pointer py-4 px-5 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100"
-                                    data-id="{{ $conv->id }}" data-name="{{ $otherUser->name }}">
+                                    data-id="{{ $conv->id }}" data-userid="{{ $otherUser->id }}"
+                                    data-name="{{ $otherUser->name }}">
 
                                     <div class="relative flex-shrink-0">
                                         <div
@@ -65,26 +66,27 @@
                                     </div>
 
                                     {{-- Latest Messages sa gedli --}}
-                                   <div class="flex-1 min-w-0">
-                                    <div class="flex items-center justify-between mb-1">
-                                        <h3 class="text-sm font-semibold text-gray-900 truncate">
-                                            {{ $otherUser->name }}</h3>
-                                        @php
-                                            $latestMessage = $conv->messages->first();
-                                        @endphp
+                                    <div class="flex-1 min-w-0">
+                                        <div class="flex items-center justify-between mb-1">
+                                            <h3 class="text-sm font-semibold text-gray-900 truncate">
+                                                {{ $otherUser->name }}</h3>
+                                            @php
+                                                $latestMessage = $conv->messages->first();
+                                            @endphp
+                                            @if ($latestMessage)
+                                                <span
+                                                    class="text-xs text-gray-500 recent-time">{{ $latestMessage->created_at->diffForHumans(null, true, true) }}</span>
+                                            @endif
+                                        </div>
                                         @if ($latestMessage)
-                                            <span class="text-xs text-gray-500 recent-time">{{ $latestMessage->created_at->diffForHumans(null, true, true) }}</span>
+                                            <p class="text-xs text-gray-600 truncate recent-message">
+                                                {{ $latestMessage->sender_id == auth()->id() ? 'You: ' : '' }}
+                                                {{ Str::limit($latestMessage->body, 40) }}
+                                            </p>
+                                        @else
+                                            <p class="text-xs text-gray-400 italic recent-message">No messages yet</p>
                                         @endif
                                     </div>
-                                    @if ($latestMessage)
-                                        <p class="text-xs text-gray-600 truncate recent-message">
-                                            {{ $latestMessage->sender_id == auth()->id() ? 'You: ' : '' }}
-                                            {{ Str::limit($latestMessage->body, 40) }}
-                                        </p>
-                                    @else
-                                        <p class="text-xs text-gray-400 italic recent-message">No messages yet</p>
-                                    @endif
-                                </div>
 
                                     <!-- Unread Badge -->
                                     @if ($unreadCount > 0)

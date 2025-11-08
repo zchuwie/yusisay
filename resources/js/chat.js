@@ -20,17 +20,18 @@ document.addEventListener("DOMContentLoaded", () => {
     originalConversations = conversationList.innerHTML;
 
     // Listen to user's personal channel for conversation list updates
-    Echo.private(`user.${userId}`)
-        .listen("MessageSent", (e) => {
-            console.log("Received message on user channel:", e);
-            updateConversationList(e.message);
-        });
+    Echo.private(`user.${userId}`).listen("MessageSent", (e) => {
+        console.log("Received message on user channel:", e);
+        updateConversationList(e.message);
+    });
 
     // Update or create conversation in the list
     async function updateConversationList(message) {
         console.log("Updating conversation list with:", message);
 
-        let convItem = conversationList.querySelector(`li[data-id="${message.conversation_id}"]`);
+        let convItem = conversationList.querySelector(
+            `li[data-id="${message.conversation_id}"]`
+        );
 
         if (convItem) {
             const messageContainer = convItem.querySelector(".flex-1.min-w-0");
@@ -40,25 +41,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (messagePreview) {
                     messagePreview.textContent = message.body;
-                    messagePreview.className = "text-xs text-gray-600 truncate recent-message";
+                    messagePreview.className =
+                        "text-xs text-gray-600 truncate recent-message";
                 }
 
                 // Update timestamp
-                const headerDiv = messageContainer.querySelector("div:first-child");
+                const headerDiv =
+                    messageContainer.querySelector("div:first-child");
                 if (headerDiv) {
-                    const timeSpan = headerDiv.querySelector("span.text-xs.text-gray-500");
+                    const timeSpan = headerDiv.querySelector(
+                        "span.text-xs.text-gray-500"
+                    );
                     if (timeSpan) {
                         timeSpan.textContent = "now";
                     } else {
                         const newTimeSpan = document.createElement("span");
-                        newTimeSpan.className = "text-xs text-gray-500 recent-time";
+                        newTimeSpan.className =
+                            "text-xs text-gray-500 recent-time";
                         newTimeSpan.textContent = "now";
                         headerDiv.appendChild(newTimeSpan);
                     }
                 }
 
                 if (conversationList.firstChild !== convItem) {
-                    conversationList.insertBefore(convItem, conversationList.firstChild);
+                    conversationList.insertBefore(
+                        convItem,
+                        conversationList.firstChild
+                    );
                 }
 
                 originalConversations = conversationList.innerHTML;
@@ -67,19 +76,22 @@ document.addEventListener("DOMContentLoaded", () => {
             // Create new conversation item
             try {
                 const response = await fetch(`/api/user/${message.sender_id}`);
-                if (!response.ok) throw new Error('Failed to fetch user info');
+                if (!response.ok) throw new Error("Failed to fetch user info");
 
                 const sender = await response.json();
 
                 const li = document.createElement("li");
-                li.className = "cursor-pointer py-4 px-5 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100";
+                li.className =
+                    "cursor-pointer py-4 px-5 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100";
                 li.dataset.id = message.conversation_id;
                 li.dataset.name = sender.name;
                 li.dataset.userid = sender.id;
 
                 const avatarHtml = sender.profile_picture
                     ? `<img src="/assets/${sender.profile_picture}" class="w-full h-full object-cover" alt="${sender.name}">`
-                    : `<span class="text-base font-bold text-white">${sender.name.charAt(0).toUpperCase()}</span>`;
+                    : `<span class="text-base font-bold text-white">${sender.name
+                          .charAt(0)
+                          .toUpperCase()}</span>`;
 
                 li.innerHTML = `
                     <div class="relative flex-shrink-0">
@@ -111,7 +123,12 @@ document.addEventListener("DOMContentLoaded", () => {
         let newConversationId = item.dataset.id;
         const userIdToChat = item.dataset.userid;
 
-        console.log("Switching to conversation:", newConversationId, "User ID:", userIdToChat);
+        console.log(
+            "Switching to conversation:",
+            newConversationId,
+            "User ID:",
+            userIdToChat
+        );
 
         if (window.currentEchoChannel) {
             window.currentEchoChannel.stopListening("MessageSent");
@@ -123,8 +140,12 @@ document.addEventListener("DOMContentLoaded", () => {
             currentChatUserName = item.dataset.name;
             currentChatUserId = userIdToChat;
 
-            const avatarElement = item.querySelector(".w-12.h-12, .w-8.h-8, .w-11.h-11");
-            currentChatUserAvatar = avatarElement ? avatarElement.outerHTML : null;
+            const avatarElement = item.querySelector(
+                ".w-12.h-12, .w-8.h-8, .w-11.h-11"
+            );
+            currentChatUserAvatar = avatarElement
+                ? avatarElement.outerHTML
+                : null;
 
             chatUserName.textContent = currentChatUserName;
             if (currentChatUserAvatar) {
@@ -138,9 +159,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
             messageInput.disabled = false;
             sendBtn.disabled = false;
-            messagesDiv.innerHTML = '<div class="text-center text-gray-400 py-8">Loading messages...</div>';
+            messagesDiv.innerHTML =
+                '<div class="text-center text-gray-400 py-8">Loading messages...</div>';
 
-            conversationList.querySelectorAll("li").forEach(li => li.classList.remove("active"));
+            conversationList
+                .querySelectorAll("li")
+                .forEach((li) => li.classList.remove("active"));
             item.classList.add("active");
 
             try {
@@ -150,23 +174,29 @@ document.addEventListener("DOMContentLoaded", () => {
                 const data = await res.json();
                 renderMessages(data.messages || []);
             } catch (err) {
-                messagesDiv.innerHTML = '<div class="text-center text-red-500 py-8">Failed to load messages</div>';
+                messagesDiv.innerHTML =
+                    '<div class="text-center text-red-500 py-8">Failed to load messages</div>';
                 console.error("Failed to load messages:", err);
                 return;
             }
 
-            window.currentEchoChannel = Echo.private(`conversation.${currentConversationId}`)
-                .listen("MessageSent", (e) => {
-                    if (e.message.sender_id === userId) return;
-                    appendMessage(e.message, false);
-                });
+            window.currentEchoChannel = Echo.private(
+                `conversation.${currentConversationId}`
+            ).listen("MessageSent", (e) => {
+                if (e.message.sender_id === userId) return;
+                appendMessage(e.message, false);
+            });
         } else if (userIdToChat) {
             currentConversationId = null;
             currentChatUserName = item.dataset.name;
             currentChatUserId = userIdToChat;
 
-            const avatarElement = item.querySelector(".w-12.h-12, .w-8.h-8, .w-11.h-11");
-            currentChatUserAvatar = avatarElement ? avatarElement.outerHTML : null;
+            const avatarElement = item.querySelector(
+                ".w-12.h-12, .w-8.h-8, .w-11.h-11"
+            );
+            currentChatUserAvatar = avatarElement
+                ? avatarElement.outerHTML
+                : null;
 
             chatUserName.textContent = currentChatUserName;
             if (currentChatUserAvatar) {
@@ -181,8 +211,11 @@ document.addEventListener("DOMContentLoaded", () => {
             messageInput.disabled = false;
             sendBtn.disabled = false;
 
-            messagesDiv.innerHTML = '<div class="text-center text-gray-400 py-8">No messages yet. Start the conversation!</div>';
-            conversationList.querySelectorAll("li").forEach(li => li.classList.remove("active"));
+            messagesDiv.innerHTML =
+                '<div class="text-center text-gray-400 py-8">No messages yet. Start the conversation!</div>';
+            conversationList
+                .querySelectorAll("li")
+                .forEach((li) => li.classList.remove("active"));
             item.classList.add("active");
 
             console.log("Prepared new chat with user:", currentChatUserId);
@@ -212,7 +245,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (q.length < 2) return;
 
             try {
-                const res = await fetch(`/search-users?q=${encodeURIComponent(q)}`);
+                const res = await fetch(
+                    `/search-users?q=${encodeURIComponent(q)}`
+                );
                 console.log(res);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
@@ -222,53 +257,103 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 if (!users.length) {
                     conversationList.innerHTML = `
-                        <div class="flex flex-col items-center justify-center py-12 px-4">
-                            <svg class="w-16 h-16 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                            </svg>
-                            <p class="text-sm text-gray-500 font-medium">No users found</p>
-                            <p class="text-xs text-gray-400 mt-1">Try a different search term</p>
-                        </div>
-                    `;
+                    <div class="flex flex-col items-center justify-center py-12 px-4">
+                        <svg class="w-16 h-16 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <p class="text-sm text-gray-500 font-medium">No users found</p>
+                        <p class="text-xs text-gray-400 mt-1">Try a different search term</p>
+                    </div>
+                `;
                     return;
                 }
 
                 users.forEach((user) => {
                     const li = document.createElement("li");
-                    li.className = "cursor-pointer py-4 px-5 hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100";
+                    li.className =
+                        "cursor-pointer py-4 px-5 hover:bg-gray-50 transition-colors flex items-center gap-3 border-b border-gray-100";
                     li.dataset.userid = user.id;
                     li.dataset.name = user.name;
 
-                    const existingConversation = findExistingConversation(user.id);
+                    const existingConversation = findExistingConversation(
+                        user.id
+                    );
                     if (existingConversation) {
                         li.dataset.id = existingConversation.id;
                     }
 
                     const avatarHtml = user.profile_picture
                         ? `<img src="/assets/${user.profile_picture}" class="w-full h-full object-cover" alt="${user.name}">`
-                        : `<span class="text-base font-bold text-white">${user.name.charAt(0).toUpperCase()}</span>`;
+                        : `<span class="text-base font-bold text-white">${user.name
+                              .charAt(0)
+                              .toUpperCase()}</span>`;
 
                     const messagePreview = existingConversation
-                        ? (existingConversation.last_message ? existingConversation.last_message : "No messages yet")
+                        ? existingConversation.last_message
+                            ? existingConversation.last_message
+                            : "No messages yet"
                         : "Click to start a conversation";
 
                     li.innerHTML = `
-                        <div class="relative flex-shrink-0">
-                            <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[#FF9013]">
-                                ${avatarHtml}
-                            </div>
+                    <div class="relative flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[#FF9013]">
+                            ${avatarHtml}
                         </div>
-                        <div class="flex-1 min-w-0">
-                            <h3 class="text-sm font-semibold text-gray-900">${user.name}</h3>
-                            <p class="text-xs text-gray-500 truncate">${messagePreview}</p>
-                        </div>
-                    `;
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h3 class="text-sm font-semibold text-gray-900">${user.name}</h3>
+                        <p class="text-xs text-gray-500 truncate">${messagePreview}</p>
+                    </div>
+                `;
 
                     li.addEventListener("click", () => {
+                        // Clear search and restore original list
                         searchInput.value = "";
-                        switchConversation(li);
+                        conversationList.innerHTML = originalConversations;
 
+                        // Find the conversation item in the restored list by user ID
+                        let targetItem = conversationList.querySelector(
+                            `li[data-userid="${user.id}"]`
+                        );
+
+                        // Only create new item if user doesn't exist at all in the list
+                        if (!targetItem) {
+                            // Create new conversation item for completely new chat
+                            targetItem = document.createElement("li");
+                            targetItem.className =
+                                "cursor-pointer py-4 px-5 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100";
+                            targetItem.dataset.userid = user.id;
+                            targetItem.dataset.name = user.name;
+
+                            targetItem.innerHTML = `
+                            <div class="relative flex-shrink-0">
+                                <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[#FF9013]">
+                                    ${avatarHtml}
+                                </div>
+                            </div>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center justify-between mb-1">
+                                    <h3 class="text-sm font-semibold text-gray-900 truncate">${user.name}</h3>
+                                    <span class="text-xs text-gray-500 recent-time">now</span>
+                                </div>
+                                <p class="text-xs text-gray-500 truncate recent-message">Click to start a conversation</p>
+                            </div>
+                        `;
+
+                            // Add to top of list
+                            conversationList.insertBefore(
+                                targetItem,
+                                conversationList.firstChild
+                            );
+                            // Update saved state
+                            originalConversations = conversationList.innerHTML;
+                        }
+
+                        // Switch to the conversation (existing or newly created)
+                        if (targetItem) {
+                            switchConversation(targetItem);
+                        }
                     });
 
                     conversationList.appendChild(li);
@@ -276,32 +361,37 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (err) {
                 console.error("Search failed:", err);
                 conversationList.innerHTML = `
-                    <div class="flex flex-col items-center justify-center py-12 px-4">
-                        <svg class="w-16 h-16 text-red-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <p class="text-sm text-red-500 font-medium">Search failed</p>
-                        <p class="text-xs text-gray-400 mt-1">Please try again later</p>
-                    </div>
-                `;
+                <div class="flex flex-col items-center justify-center py-12 px-4">
+                    <svg class="w-16 h-16 text-red-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <p class="text-sm text-red-500 font-medium">Search failed</p>
+                    <p class="text-xs text-gray-400 mt-1">Please try again later</p>
+                </div>
+            `;
             }
         }, 300);
     });
 
     function findExistingConversation(userId) {
-        const originalListContainer = document.createElement('div');
+        const originalListContainer = document.createElement("div");
         originalListContainer.innerHTML = originalConversations;
-        const conversationItems = originalListContainer.querySelectorAll('li[data-userid]');
+        const conversationItems =
+            originalListContainer.querySelectorAll("li[data-userid]");
 
         for (let item of conversationItems) {
             if (item.dataset.userid === userId && item.dataset.id) {
-                const messageElement = item.querySelector('.flex-1.min-w-0 p:last-child');
-                const lastMessage = messageElement ? messageElement.textContent : "No messages yet";
+                const messageElement = item.querySelector(
+                    ".flex-1.min-w-0 p:last-child"
+                );
+                const lastMessage = messageElement
+                    ? messageElement.textContent
+                    : "No messages yet";
 
                 return {
                     id: item.dataset.id,
-                    last_message: lastMessage
+                    last_message: lastMessage,
                 };
             }
         }
@@ -321,12 +411,17 @@ document.addEventListener("DOMContentLoaded", () => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                    "X-CSRF-TOKEN": document.querySelector(
+                        'meta[name="csrf-token"]'
+                    ).content,
                 },
                 body: JSON.stringify({ user_id: currentChatUserId }),
             });
 
-            if (!convRes.ok) throw new Error(`HTTP ${convRes.status} - Failed to create conversation`);
+            if (!convRes.ok)
+                throw new Error(
+                    `HTTP ${convRes.status} - Failed to create conversation`
+                );
 
             const conv = await convRes.json();
             currentConversationId = conv.id;
@@ -337,15 +432,20 @@ document.addEventListener("DOMContentLoaded", () => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                    "X-CSRF-TOKEN": document.querySelector(
+                        'meta[name="csrf-token"]'
+                    ).content,
                 },
                 body: JSON.stringify({
                     conversation_id: currentConversationId,
-                    body: body
+                    body: body,
                 }),
             });
 
-            if (!msgRes.ok) throw new Error(`HTTP ${msgRes.status} - Failed to send message`);
+            if (!msgRes.ok)
+                throw new Error(
+                    `HTTP ${msgRes.status} - Failed to send message`
+                );
 
             const msg = await msgRes.json();
 
@@ -358,7 +458,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 if (!activeItem.dataset.id) {
                     const newItem = activeItem.cloneNode(true);
                     newItem.dataset.id = currentConversationId;
-                    conversationList.insertBefore(newItem, conversationList.firstChild);
+                    conversationList.insertBefore(
+                        newItem,
+                        conversationList.firstChild
+                    );
                     // Update saved state
                     originalConversations = conversationList.innerHTML;
                 }
@@ -370,16 +473,19 @@ document.addEventListener("DOMContentLoaded", () => {
                 Echo.leave(`private-conversation.${currentConversationId}`);
             }
 
-            window.currentEchoChannel = Echo.private(`conversation.${currentConversationId}`)
-                .listen("MessageSent", (e) => {
-                    if (e.message.sender_id === userId) return;
-                    appendMessage(e.message, false);
-                });
+            window.currentEchoChannel = Echo.private(
+                `conversation.${currentConversationId}`
+            ).listen("MessageSent", (e) => {
+                if (e.message.sender_id === userId) return;
+                appendMessage(e.message, false);
+            });
 
             return msg;
-
         } catch (err) {
-            console.error("Failed to create conversation and send message:", err);
+            console.error(
+                "Failed to create conversation and send message:",
+                err
+            );
             throw err;
         }
     }
@@ -396,7 +502,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!currentConversationId && currentChatUserId) {
             const messageCopy = body;
             messageInput.value = "";
-            messageInput.style.height = 'auto';
+            messageInput.style.height = "auto";
             messageInput.disabled = true;
             sendBtn.disabled = true;
 
@@ -422,7 +528,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const messageCopy = body;
         messageInput.value = "";
-        messageInput.style.height = 'auto';
+        messageInput.style.height = "auto";
         messageInput.disabled = true;
         sendBtn.disabled = true;
 
@@ -431,11 +537,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
-                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                    "X-CSRF-TOKEN": document.querySelector(
+                        'meta[name="csrf-token"]'
+                    ).content,
                 },
                 body: JSON.stringify({
                     conversation_id: currentConversationId,
-                    body: messageCopy
+                    body: messageCopy,
                 }),
             });
 
@@ -464,14 +572,22 @@ document.addEventListener("DOMContentLoaded", () => {
     // Format message time
     function formatMessageTime(dateString) {
         const date = new Date(dateString);
-        return date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true });
+        return date.toLocaleTimeString("en-US", {
+            hour: "numeric",
+            minute: "2-digit",
+            hour12: true,
+        });
     }
 
     function createTimestamp(date) {
         const div = document.createElement("div");
         div.className = "text-center text-gray-400 text-xs my-2";
         div.textContent = date.toLocaleString([], {
-            day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit", hour12: true
+            day: "2-digit",
+            month: "2-digit",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
         });
         return div;
     }
@@ -500,7 +616,8 @@ document.addEventListener("DOMContentLoaded", () => {
         messagesDiv.innerHTML = "";
 
         if (!messages.length) {
-            messagesDiv.innerHTML = '<div class="text-center text-gray-400 py-8">No messages yet. Start the conversation!</div>';
+            messagesDiv.innerHTML =
+                '<div class="text-center text-gray-400 py-8">No messages yet. Start the conversation!</div>';
             return;
         }
 
@@ -512,7 +629,9 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!lastTimestamp || (currentTime - lastTimestamp) / 60000 > 10) {
                 fragment.appendChild(createTimestamp(currentTime));
             }
-            fragment.appendChild(createMessageElement(m, m.sender_id === userId));
+            fragment.appendChild(
+                createMessageElement(m, m.sender_id === userId)
+            );
             lastTimestamp = currentTime;
         });
 
@@ -526,7 +645,9 @@ document.addEventListener("DOMContentLoaded", () => {
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
         // Update conversation list recent message
-        const convItem = conversationList.querySelector(`li[data-id="${msg.conversation_id}"]`);
+        const convItem = conversationList.querySelector(
+            `li[data-id="${msg.conversation_id}"]`
+        );
         if (convItem) {
             const messageContainer = convItem.querySelector(".flex-1.min-w-0");
             if (messageContainer) {
@@ -534,13 +655,18 @@ document.addEventListener("DOMContentLoaded", () => {
                 let messagePreview = paragraphs[paragraphs.length - 1];
 
                 if (messagePreview) {
-                    messagePreview.textContent = isMine ? `You: ${msg.body}` : msg.body;
+                    messagePreview.textContent = isMine
+                        ? `You: ${msg.body}`
+                        : msg.body;
                     messagePreview.className = "text-xs text-gray-600 truncate";
                 }
 
-                const headerDiv = messageContainer.querySelector("div:first-child");
+                const headerDiv =
+                    messageContainer.querySelector("div:first-child");
                 if (headerDiv) {
-                    const timeSpan = headerDiv.querySelector("span.text-xs.text-gray-500");
+                    const timeSpan = headerDiv.querySelector(
+                        "span.text-xs.text-gray-500"
+                    );
                     if (timeSpan) {
                         timeSpan.textContent = "now";
                     } else {
@@ -552,7 +678,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
 
                 if (conversationList.firstChild !== convItem) {
-                    conversationList.insertBefore(convItem, conversationList.firstChild);
+                    conversationList.insertBefore(
+                        convItem,
+                        conversationList.firstChild
+                    );
                 }
             }
         }
