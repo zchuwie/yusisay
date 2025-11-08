@@ -9,6 +9,7 @@
 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700,800&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
 
     <script src="https://unpkg.com/lucide@latest"></script>
 
@@ -107,16 +108,17 @@
             
             <!-- Logo Section -->
             <div class="h-16 flex items-center justify-center p-4 bg-black bg-opacity-10 border-b border-white border-opacity-20">
-                <a href="{{ route('admin.dashboard') }}" 
-                   class="flex items-center space-x-2 overflow-hidden"
-                   :class="sidebarOpen ? 'w-full' : 'w-auto'">
-                    <div class="w-8 h-8 bg-white rounded-lg flex items-center justify-center flex-shrink-0">
-                        <span class="text-orange-500 font-black text-lg">Y</span>
-                    </div>
-                    <span class="text-xl font-extrabold text-white tracking-wider whitespace-nowrap sidebar-transition"
-                          :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">
-                        Yusisay
-                    </span>
+                <a href="{{ route('admin.dashboard') }}" class="block">
+                    <h1 class="text-xl leading-[1.6] pt-2 pb-2 relative sidebar-transition"
+                        style="
+          font-family: 'Pacifico', cursive;
+          font-weight: 400;
+          color: white;
+          display: inline-block;
+          transform: translateY(-4px);
+        "
+                        x-text="sidebarOpen ? 'Yusisay' : 'Y'">
+                    </h1>
                 </a>
             </div>
 

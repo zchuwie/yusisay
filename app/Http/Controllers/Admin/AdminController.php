@@ -8,6 +8,7 @@ use App\Models\Report;
 use App\Models\Post;
 use App\Models\CensoredWord;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
 class AdminController extends Controller
@@ -82,7 +83,7 @@ class AdminController extends Controller
             
             return response()->json($data);
         } catch (\Exception $e) {
-            \Log::error('Growth data error: ' . $e->getMessage());
+            Log::error('Growth data error: ' . $e->getMessage());
             return response()->json([
                 'error' => 'Failed to fetch growth data',
                 'message' => $e->getMessage()
