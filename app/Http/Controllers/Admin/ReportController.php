@@ -3,162 +3,247 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\CensoredWord;
+use App\Models\Report;
+use App\Models\Post;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Http\JsonResponse; 
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Auth; 
-use Illuminate\View\View;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Auth;
 
 class ReportController extends Controller
 {
-    /**
-     * Aggregates reports by post_id and returns the paginated data.
-     */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
-        // Check for required tables early
-        if (!Schema::hasTable('reports') || !Schema::hasTable('posts')) {
-            return response()->json([
-                'error' => 'Database Error: Missing "reports" or "posts" table.',
-                'details' => 'Please ensure both tables exist and are properly migrated.'
-            ], 500);
-        }
+        $perPage = intval($request->get('per_page', 10));
+        $page = intval($request->get('page', 1));
+        $search = $request->get('search', null);
+        $sortBy = $request->get('sort_by', 'total_reports');
+        $sortDir = $request->get('sort_dir', 'desc');
+        $showResolved = filter_var($request->query('resolved', false), FILTER_VALIDATE_BOOLEAN);
 
-        try {
-            // 1. Fetch the list of banned words from the database
-            $bannedWords = CensoredWord::pluck('word')->toArray();
-
-            $perPage = $request->get('per_page', 10);
-            $search = $request->get('search');
-            $sortBy = $request->get('sort_by', 'total_reports');
-            $sortDir = $request->get('sort_dir', 'desc');
-
-            // Subquery to count pending reports per post
-            $reportsCount = DB::table('reports')
-                ->select('post_id', DB::raw('count(*) as total_reports'))
-                ->where('status', 'pending')
+        // Handle resolved reports
+        if ($showResolved) {
+            // Group by post_id and get the latest report for each post
+            $query = Report::select(
+                    'post_id',
+                    DB::raw('MAX(id) as latest_report_id'),
+                    DB::raw('COUNT(*) as total_reports'),
+                    DB::raw('MAX(reviewed_at) as reviewed_at'),
+                    DB::raw('MAX(status) as status')
+                )
+                ->whereIn('status', [Report::STATUS_APPROVED, Report::STATUS_DISMISSED])
                 ->groupBy('post_id');
 
-            // Main query to join posts with report counts
-            $query = DB::table('posts')
-                ->joinSub($reportsCount, 'report_counts', function ($join) {
-                    $join->on('posts.id', '=', 'report_counts.post_id');
-                })
-                ->select(
-                    'posts.id as post_id',
-                    'posts.user_id', 
-                    'posts.content', 
-                    'report_counts.total_reports' 
-                );
-
+            // Add search filter
             if ($search) {
-                // Search only applies to the 'content' column
-                $query->where('posts.content', 'like', '%' . $search . '%');
+                $query->join('posts', 'posts.id', '=', 'reports.post_id')
+                     ->where(function($q) use ($search) {
+                         $q->where('posts.title', 'like', '%' . $search . '%')
+                           ->orWhere('posts.content', 'like', '%' . $search . '%');
+                     });
             }
 
-            // Apply sorting
-            $allowedSortColumns = ['total_reports', 'posts.content', 'post_id'];
-            $column = in_array($sortBy, $allowedSortColumns) ? $sortBy : 'total_reports';
-            $direction = strtolower($sortDir) === 'desc' ? 'desc' : 'asc';
-
-            if ($column === 'post_id') {
-                $query->orderBy('posts.id', $direction);
-            } elseif ($column === 'posts.content') { 
-                $query->orderBy('posts.content', $direction);
-            } else {
-                $query->orderBy('total_reports', $direction);
-            }
-            
-            $paginator = $query->paginate($perPage);
-
-            // 2. Apply Censoring and formatting
-            $censoredReports = $paginator->getCollection()->map(function ($report) use ($bannedWords) {
-                
-                if (isset($report->content)) {
-                    $report->censored_content = $this->censorWords($report->content, $bannedWords);
-                } else {
-                    $report->censored_content = 'N/A';
+            // Add sorting
+            if ($sortBy === 'total_reports') {
+                $query->orderBy('total_reports', $sortDir);
+            } elseif ($sortBy === 'title') {
+                if (!$search) {
+                    $query->join('posts', 'posts.id', '=', 'reports.post_id');
                 }
-                
-                // Clean up output
-                $reportArray = (array) $report;
-                unset($reportArray['content']);
-                return (object) $reportArray; 
-            });
-            
-            $paginator->setCollection($censoredReports);
+                $query->orderBy('posts.title', $sortDir);
+            } elseif ($sortBy === 'post_id') {
+                $query->orderBy('post_id', $sortDir);
+            } else {
+                $query->orderBy('reviewed_at', 'desc');
+            }
+
+            // Paginate
+            $paginator = $query->paginate($perPage, ['*'], 'page', $page);
+
+            // Transform the results
+            $items = $paginator->getCollection()->map(function($row) {
+                $post = Post::find($row->post_id);
+                if (!$post) return null;
+
+                $title = $post->title ?? Str::limit(strip_tags($post->content), 60);
+                $censoredPreview = $post->censored_content ?? Str::limit(strip_tags($post->content), 100);
+
+                $author = $post->is_anonymous 
+                    ? 'Anonymous' 
+                    : optional(User::find($post->user_id))->name ?? 'User';
+
+                return [
+                    'post_id' => $post->id,
+                    'title' => $title,
+                    'censored_content' => $censoredPreview,
+                    'post_content' => $post->content,
+                    'is_hidden' => (bool) $post->is_hidden,
+                    'post_author' => $author,
+                    'status' => $row->status,
+                    'reviewed_at' => $row->reviewed_at,
+                    'total_reports' => (int) $row->total_reports,
+                ];
+            })->filter()->values();
+
+            $paginator->setCollection($items);
 
             return response()->json($paginator);
-
-        } catch (\Exception $e) {
-            Log::error("Reports API failed with SQL error: " . $e->getMessage());
-            
-            return response()->json([
-                'error' => 'Server Error: The database query failed.',
-                'details' => 'A SQL error occurred. Please verify all tables (posts, reports, censored_words) exist and have the required columns.',
-                'sql_error_detail' => $e->getMessage() 
-            ], 500);
         }
+
+        // Handle pending reports - GROUP BY post_id
+        $base = Report::query()
+            ->select(
+                'post_id', 
+                DB::raw('COUNT(*) as total_reports'), 
+                DB::raw('MAX(created_at) as latest_report_at'), 
+                DB::raw('MIN(created_at) as oldest_report_at')
+            )
+            ->where('status', Report::STATUS_PENDING)
+            ->groupBy('post_id');
+
+        // Add search filter
+        if ($search) {
+            $base->join('posts', 'posts.id', '=', 'reports.post_id')
+                 ->where(function($q) use ($search) {
+                     $q->where('posts.title', 'like', '%' . $search . '%')
+                       ->orWhere('posts.content', 'like', '%' . $search . '%');
+                 });
+        }
+
+        // Add sorting
+        if (in_array($sortBy, ['total_reports', 'latest_report_at', 'oldest_report_at'])) {
+            $base->orderBy($sortBy, $sortDir);
+        } elseif ($sortBy === 'post_id') {
+            $base->orderBy('post_id', $sortDir);
+        } elseif ($sortBy === 'title') {
+            if (!$search) {
+                $base->join('posts', 'posts.id', '=', 'reports.post_id');
+            }
+            $base->orderBy('posts.title', $sortDir);
+        } else {
+            $base->orderBy('total_reports', 'desc');
+        }
+
+        // Paginate
+        $paginator = $base->paginate($perPage, ['*'], 'page', $page);
+
+        // Transform the results
+        $items = $paginator->getCollection()->map(function($row) {
+            $post = Post::find($row->post_id);
+            if (!$post) return null;
+
+            $title = $post->title ?? Str::limit(strip_tags($post->content), 60);
+            $censoredPreview = $post->censored_content ?? Str::limit(strip_tags($post->content), 100);
+
+            if ($post->is_anonymous) {
+                $author = 'Anonymous';
+            } else {
+                $user = User::find($post->user_id);
+                $author = $user ? ($user->name ?? $user->username ?? 'User') : 'User';
+            }
+
+            // Get all reports for this post
+            $reportModels = Report::where('post_id', $row->post_id)
+                ->where('status', Report::STATUS_PENDING)
+                ->orderBy('created_at', 'desc')
+                ->with('user')
+                ->get();
+
+            $reporters = $reportModels->map(function($r) {
+                $u = $r->user;
+                return [
+                    'id' => $r->user_id,
+                    'username' => $u ? ($u->name ?? $u->username ?? 'User') : 'User',
+                    'created_at' => $r->created_at->toDateTimeString(),
+                    'reason' => $r->reason ?? 'No reason provided',
+                ];
+            });
+
+            return [
+                'post_id' => $row->post_id,
+                'title' => $title,
+                'censored_content' => $censoredPreview,
+                'post_content' => $post->content,
+                'is_anonymous' => (bool) $post->is_anonymous,
+                'is_hidden' => (bool) ($post->is_hidden ?? 0),
+                'post_author' => $author,
+                'total_reports' => (int) $row->total_reports,
+                'latest_report_at' => $row->latest_report_at,
+                'oldest_report_at' => $row->oldest_report_at,
+                'reporters' => $reporters,
+                'status' => 'pending',
+            ];
+        })->filter()->values();
+
+        $paginator->setCollection($items);
+
+        return response()->json($paginator);
     }
 
-    /**
-     * Censors a string by replacing banned words with asterisks (****).
-     */
-    private function censorWords(string $text, array $bannedWords): string
+    public function approve($postId, Request $request)
     {
-        if (empty($bannedWords)) {
-            return $text;
+        $post = Post::find($postId);
+        if (!$post) {
+            return response()->json(['message' => 'Post not found'], 404);
         }
-        
-        $replacement = '****';
-        return str_ireplace($bannedWords, $replacement, $text);
+
+        $reports = Report::where('post_id', $postId)
+            ->where('status', Report::STATUS_PENDING)
+            ->get();
+
+        if ($reports->isEmpty()) {
+            return response()->json(['message' => 'No pending reports for this post'], 400);
+        }
+
+        // Update the reports
+        Report::where('post_id', $postId)
+            ->where('status', Report::STATUS_PENDING)
+            ->update([
+                'status' => Report::STATUS_APPROVED,
+                'reviewed_at' => Carbon::now(),
+                'reviewed_by' => Auth::id(),
+                'updated_at' => Carbon::now(),
+            ]);
+
+        // Hide the post
+        $post->is_hidden = true;
+        $post->save();
+
+        return response()->json(['message' => 'Reports approved and post hidden.'], 200);
     }
 
-    /**
-     * Resolves (dismisses) all pending reports for a specific post.
-     * This function uses $postId and does NOT reference an undefined $post variable.
-     */
-    public function resolve(Request $request, $postId): JsonResponse
+    public function decline($postId, Request $request)
     {
-        // NOTE: Authentication is handled by the 'auth' middleware on the route group.
-        try {
-            $user = Auth::user(); 
-            $reviewerId = $user ? $user->id : null;
-            
-            if (!$reviewerId) {
-                // Should only happen if middleware fails, but good defensive programming
-                return response()->json(['error' => 'Authentication required to perform this action.'], 401);
-            }
-
-            if (!is_numeric($postId)) {
-                return response()->json(['error' => 'Invalid Post ID provided.'], 400);
-            }
-            
-            $updated = DB::table('reports')
-                ->where('post_id', (int)$postId)
-                ->where('status', 'pending')
-                ->update([
-                    'status' => 'dismissed', 
-                    'reviewed_at' => now(),
-                    'reviewed_by' => $reviewerId, 
-                ]);
-
-            if ($updated > 0) {
-                // This line correctly uses $updated and $postId
-                return response()->json(['message' => "Successfully dismissed $updated pending report(s) for Post ID $postId."]);
-            }
-
-            return response()->json(['message' => "No pending reports found for Post ID $postId to resolve."], 200);
-
-        } catch (\Exception $e) {
-            Log::error("Failed to resolve reports for Post ID $postId: " . $e->getMessage());
-            return response()->json([
-                'error' => 'Failed to resolve reports.',
-                'details' => $e->getMessage()
-            ], 500);
+        $post = Post::find($postId);
+        if (!$post) {
+            return response()->json(['message' => 'Post not found'], 404);
         }
+
+        $reports = Report::where('post_id', $postId)
+            ->where('status', Report::STATUS_PENDING)
+            ->get();
+
+        if ($reports->isEmpty()) {
+            return response()->json(['message' => 'No pending reports for this post'], 400);
+        }
+
+        // Update the reports
+        Report::where('post_id', $postId)
+            ->where('status', Report::STATUS_PENDING)
+            ->update([
+                'status' => Report::STATUS_DISMISSED,
+                'reviewed_at' => Carbon::now(),
+                'reviewed_by' => Auth::id(),
+                'updated_at' => Carbon::now(),
+            ]);
+
+        // Ensure post is visible
+        $post->is_hidden = false;
+        $post->save();
+
+        return response()->json(['message' => 'Reports dismissed and post visible.'], 200);
     }
 }

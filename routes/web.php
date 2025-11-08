@@ -46,22 +46,35 @@ Route::middleware('auth')->group(function () {
 
 });
 
+// In routes/web.php
+Route::middleware(['auth', 'admin'])->prefix('admin/api')->group(function () {
+    Route::get('/users', [App\Http\Controllers\Admin\UserController::class, 'index']);
+    Route::get('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'show']);
+    Route::put('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'update']);
+    Route::delete('/users/{id}', [App\Http\Controllers\Admin\UserController::class, 'destroy']);
+});
 
 Route::prefix('admin')->name('admin.')->group(function () {
-    // Admin View Routes (admin/dashboard, admin/users, admin/reports)
+    // Admin View Routes
     Route::get('dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('users', [AdminController::class, 'user'])->name('user');
     Route::get('reports', [AdminController::class, 'report'])->name('report');
+
+    // Reports API
     Route::get('/api/reports', [AdminReportController::class, 'index'])->name('reports.index');
     Route::put('/api/reports/{reportId}/resolve', [AdminReportController::class, 'resolve'])->name('reports.resolve');
-    
+
+    // Approve / Decline reports
+    Route::put('/api/reports/{postId}/approve', [AdminReportController::class, 'approve'])->name('reports.approve');
+    Route::put('/api/reports/{postId}/decline', [AdminReportController::class, 'decline'])->name('reports.decline');
+
     // Censored Words API
     Route::get('/api/censored-words', [CensoredWordController::class, 'index'])->name('censored_words.index');
     Route::post('/api/censored-words', [CensoredWordController::class, 'store'])->name('censored_words.store');
     Route::delete('/api/censored-words/{censored_word}', [CensoredWordController::class, 'destroy'])->name('censored_words.destroy');
-    
+
     // Users API
     Route::get('/api/users', [UserController::class, 'index'])->name('users.index');
-});-
+});
 
 require __DIR__ . '/auth.php';

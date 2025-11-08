@@ -24,4 +24,14 @@ class Post extends Model
     {
         return $this->hasMany(Comment::class);
     }
+
+    public function getIsHiddenAttribute()
+    {
+        return $this->attributes['is_hidden'];
+    }
+
+    public function setIsHiddenAttribute($value)
+    {
+        $this->attributes['is_hidden'] = $value;
+    }
 }
