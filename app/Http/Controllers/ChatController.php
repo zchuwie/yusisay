@@ -15,19 +15,25 @@ class ChatController extends Controller
     {
         $conversations = Conversation::where('user_one_id', Auth::id())
             ->orWhere('user_two_id', Auth::id())
-            ->with(['userOne', 'userTwo'])
-            ->get();
+            ->with(['userOne', 'userTwo', 'messages' => function($query) {
+                $query->latest()->limit(1);
+            }])
+            ->get()
+            ->sortByDesc(function($conversation) {
+                return $conversation->messages->first()?->created_at ?? $conversation->updated_at;
+            });
 
         return view('chat.index', compact('conversations'));
     }
 
     public function search(Request $request)
     {
-        $search = $request->input('query');
+        $search = strtolower(trim($request->input('q')));
 
-        $users = User::where('name', 'like', "%{$search}%")
-            ->where('id', '!=', auth()->id())
-            ->with('userInfo') // include profile picture
+        $users = User::whereRaw('LOWER(name) LIKE ?', ["%{$search}%"])
+            ->where('id', '!=', Auth::id())
+            ->with('userInfo')
+            ->limit(20)
             ->get()
             ->map(function ($user) {
                 return [
@@ -41,10 +47,21 @@ class ChatController extends Controller
     }
 
 
-    public function show(Conversation $conversation)
+   public function show($conversationId)
     {
-        $conversation->load('messages.sender');
-        return response()->json($conversation);
+        $conversation = Conversation::find($conversationId);
+
+        if (!$conversation) {
+            return response()->json([
+                'messages' => [], // empty array if conversation not found
+            ]);
+        }
+
+        $messages = $conversation->messages()->with('sender')->get();
+
+        return response()->json([
+            'messages' => $messages,
+        ]);
     }
 
     public function sendMessage(Request $request)
@@ -73,5 +90,16 @@ class ChatController extends Controller
         );
 
         return response()->json($conversation);
+    }
+
+    public function getUser($userId)
+    {
+        $user = User::with('userInfo')->findOrFail($userId);
+        
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'profile_picture' => $user->userInfo->profile_picture ?? null,
+        ]);
     }
 }
