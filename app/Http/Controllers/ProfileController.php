@@ -29,8 +29,7 @@ class ProfileController extends Controller
         }
 
         $user->save();
-
-        // Update or create profile picture
+ 
         if ($request->has('profile_picture')) {
             UserInfo::updateOrCreate(
                 ['user_id' => $user->id],

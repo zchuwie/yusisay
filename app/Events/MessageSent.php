@@ -26,8 +26,7 @@ class MessageSent implements ShouldBroadcastNow
         $channels = [
             new PrivateChannel('conversation.' . $this->message->conversation_id),
         ];
-
-        // Also broadcast to the receiver's personal channel for conversation list updates
+ 
         $conversation = $this->message->conversation;
         $receiverId = $this->message->sender_id === $conversation->user_one_id 
             ? $conversation->user_two_id 

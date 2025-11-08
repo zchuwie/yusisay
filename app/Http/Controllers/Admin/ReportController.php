@@ -36,8 +36,7 @@ class ReportController extends Controller
                 )
                 ->whereIn('reports.status', [Report::STATUS_APPROVED, Report::STATUS_DISMISSED])
                 ->groupBy('reports.post_id');
-
-            // Join posts table if needed for search
+ 
             if ($search) {
                 $query->leftJoin('posts', 'posts.id', '=', 'reports.post_id')
                       ->where(function($q) use ($search) {
@@ -45,8 +44,7 @@ class ReportController extends Controller
                             ->orWhere('reports.post_id', 'like', '%' . $search . '%');
                       });
             }
-
-            // Add sorting
+ 
             if ($sortBy === 'total_reports') {
                 $query->orderBy('total_reports', $sortDir);
             } elseif ($sortBy === 'post_id') {
@@ -85,8 +83,7 @@ class ReportController extends Controller
 
             return response()->json($paginator);
         }
-
-        // Handle pending reports
+ 
         $base = Report::select(
                 'reports.post_id', 
                 DB::raw('COUNT(*) as total_reports'), 
@@ -95,8 +92,7 @@ class ReportController extends Controller
             )
             ->where('reports.status', Report::STATUS_PENDING)
             ->groupBy('reports.post_id');
-
-        // Join posts table if needed for search
+ 
         if ($search) {
             $base->leftJoin('posts', 'posts.id', '=', 'reports.post_id')
                  ->where(function($q) use ($search) {
@@ -104,8 +100,7 @@ class ReportController extends Controller
                        ->orWhere('reports.post_id', 'like', '%' . $search . '%');
                  });
         }
-
-        // Add sorting
+ 
         if (in_array($sortBy, ['total_reports', 'latest_report_at', 'oldest_report_at'])) {
             $base->orderBy($sortBy, $sortDir);
         } elseif ($sortBy === 'post_id') {
@@ -194,8 +189,7 @@ class ReportController extends Controller
         if ($reports->isEmpty()) {
             return response()->json(['message' => 'No pending reports for this post'], 400);
         }
-
-        // Update the reports
+ 
         Report::where('post_id', $postId)
             ->where('status', Report::STATUS_PENDING)
             ->update([
@@ -204,8 +198,7 @@ class ReportController extends Controller
                 'reviewed_by' => Auth::id(),
                 'updated_at' => Carbon::now(),
             ]);
-
-        // Hide the post
+ 
         $post->is_hidden = true;
         $post->save();
 
@@ -226,8 +219,7 @@ class ReportController extends Controller
         if ($reports->isEmpty()) {
             return response()->json(['message' => 'No pending reports for this post'], 400);
         }
-
-        // Update the reports
+ 
         Report::where('post_id', $postId)
             ->where('status', Report::STATUS_PENDING)
             ->update([
@@ -236,8 +228,7 @@ class ReportController extends Controller
                 'reviewed_by' => Auth::id(),
                 'updated_at' => Carbon::now(),
             ]);
-
-        // Ensure post is visible
+ 
         $post->is_hidden = false;
         $post->save();
 

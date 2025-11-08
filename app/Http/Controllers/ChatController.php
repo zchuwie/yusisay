@@ -53,7 +53,7 @@ class ChatController extends Controller
 
         if (!$conversation) {
             return response()->json([
-                'messages' => [], // empty array if conversation not found
+                'messages' => [], 
             ]);
         }
 
