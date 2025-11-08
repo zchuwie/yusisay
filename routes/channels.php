@@ -9,3 +9,8 @@ Broadcast::channel('conversation.{conversationId}', function ($user, $conversati
               ->orWhere('user_two_id', $user->id);
         })->exists();
 });
+
+// User-level channel for conversation list updates
+Broadcast::channel('user.{userId}', function ($user, $userId) {
+    return (int) $user->id === (int) $userId;
+});

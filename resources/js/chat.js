@@ -1,5 +1,3 @@
-// COMPLETE CHAT.JS - Replace your entire chat.js file with this
-
 document.addEventListener("DOMContentLoaded", () => {
     let currentConversationId = null;
     let currentChatUserName = null;
@@ -21,6 +19,91 @@ document.addEventListener("DOMContentLoaded", () => {
     // Save original conversations when page loads
     originalConversations = conversationList.innerHTML;
 
+    // Listen to user's personal channel for conversation list updates
+    Echo.private(`user.${userId}`)
+        .listen("MessageSent", (e) => {
+            console.log("Received message on user channel:", e);
+            updateConversationList(e.message);
+        });
+
+    // Update or create conversation in the list
+    async function updateConversationList(message) {
+        console.log("Updating conversation list with:", message);
+
+        let convItem = conversationList.querySelector(`li[data-id="${message.conversation_id}"]`);
+
+        if (convItem) {
+            const messageContainer = convItem.querySelector(".flex-1.min-w-0");
+            if (messageContainer) {
+                const paragraphs = messageContainer.querySelectorAll("p");
+                let messagePreview = paragraphs[paragraphs.length - 1];
+
+                if (messagePreview) {
+                    messagePreview.textContent = message.body;
+                    messagePreview.className = "text-xs text-gray-600 truncate recent-message";
+                }
+
+                // Update timestamp
+                const headerDiv = messageContainer.querySelector("div:first-child");
+                if (headerDiv) {
+                    const timeSpan = headerDiv.querySelector("span.text-xs.text-gray-500");
+                    if (timeSpan) {
+                        timeSpan.textContent = "now";
+                    } else {
+                        const newTimeSpan = document.createElement("span");
+                        newTimeSpan.className = "text-xs text-gray-500 recent-time";
+                        newTimeSpan.textContent = "now";
+                        headerDiv.appendChild(newTimeSpan);
+                    }
+                }
+
+                if (conversationList.firstChild !== convItem) {
+                    conversationList.insertBefore(convItem, conversationList.firstChild);
+                }
+
+                originalConversations = conversationList.innerHTML;
+            }
+        } else {
+            // Create new conversation item
+            try {
+                const response = await fetch(`/api/user/${message.sender_id}`);
+                if (!response.ok) throw new Error('Failed to fetch user info');
+
+                const sender = await response.json();
+
+                const li = document.createElement("li");
+                li.className = "cursor-pointer py-4 px-5 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100";
+                li.dataset.id = message.conversation_id;
+                li.dataset.name = sender.name;
+                li.dataset.userid = sender.id;
+
+                const avatarHtml = sender.profile_picture
+                    ? `<img src="/assets/${sender.profile_picture}" class="w-full h-full object-cover" alt="${sender.name}">`
+                    : `<span class="text-base font-bold text-white">${sender.name.charAt(0).toUpperCase()}</span>`;
+
+                li.innerHTML = `
+                    <div class="relative flex-shrink-0">
+                        <div class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[#FF9013]">
+                            ${avatarHtml}
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="text-sm font-semibold text-gray-900 truncate">${sender.name}</h3>
+                            <span class="text-xs text-gray-500 recent-time">now</span>
+                        </div>
+                        <p class="text-xs text-gray-600 truncate recent-message">${message.body}</p>
+                    </div>
+                `;
+
+                conversationList.insertBefore(li, conversationList.firstChild);
+                originalConversations = conversationList.innerHTML;
+            } catch (error) {
+                console.error("Failed to create conversation item:", error);
+            }
+        }
+    }
+
     // Switch or start a conversation
     async function switchConversation(item) {
         if (!item) return;
@@ -30,41 +113,33 @@ document.addEventListener("DOMContentLoaded", () => {
 
         console.log("Switching to conversation:", newConversationId, "User ID:", userIdToChat);
 
-        // Stop previous Echo channel
         if (window.currentEchoChannel) {
             window.currentEchoChannel.stopListening("MessageSent");
             Echo.leave(`private-conversation.${currentConversationId}`);
             window.currentEchoChannel = null;
         }
-
-        // If we have an existing conversation, use it
         if (newConversationId) {
             currentConversationId = newConversationId;
             currentChatUserName = item.dataset.name;
             currentChatUserId = userIdToChat;
 
-            // Load avatar
             const avatarElement = item.querySelector(".w-12.h-12, .w-8.h-8, .w-11.h-11");
             currentChatUserAvatar = avatarElement ? avatarElement.outerHTML : null;
 
-            // Update chat header
             chatUserName.textContent = currentChatUserName;
             if (currentChatUserAvatar) {
                 chatUserAvatar.innerHTML = currentChatUserAvatar;
             }
 
-            // Update status text
             const statusElement = document.getElementById("chatUserStatus");
             if (statusElement) {
                 statusElement.textContent = "Active now";
             }
 
-            // Enable input
             messageInput.disabled = false;
             sendBtn.disabled = false;
             messagesDiv.innerHTML = '<div class="text-center text-gray-400 py-8">Loading messages...</div>';
 
-            // Mark as active in list
             conversationList.querySelectorAll("li").forEach(li => li.classList.remove("active"));
             item.classList.add("active");
 
@@ -80,42 +155,33 @@ document.addEventListener("DOMContentLoaded", () => {
                 return;
             }
 
-            // Setup real-time listener
             window.currentEchoChannel = Echo.private(`conversation.${currentConversationId}`)
                 .listen("MessageSent", (e) => {
                     if (e.message.sender_id === userId) return;
                     appendMessage(e.message, false);
                 });
         } else if (userIdToChat) {
-            // No conversation yet, just prepare the UI for a new chat
             currentConversationId = null;
             currentChatUserName = item.dataset.name;
             currentChatUserId = userIdToChat;
 
-            // Load avatar
             const avatarElement = item.querySelector(".w-12.h-12, .w-8.h-8, .w-11.h-11");
             currentChatUserAvatar = avatarElement ? avatarElement.outerHTML : null;
 
-            // Update chat header
             chatUserName.textContent = currentChatUserName;
             if (currentChatUserAvatar) {
                 chatUserAvatar.innerHTML = currentChatUserAvatar;
             }
 
-            // Update status text
             const statusElement = document.getElementById("chatUserStatus");
             if (statusElement) {
                 statusElement.textContent = "Active now";
             }
 
-            // Enable input for new conversation
             messageInput.disabled = false;
             sendBtn.disabled = false;
 
-            // Clear messages and show placeholder
             messagesDiv.innerHTML = '<div class="text-center text-gray-400 py-8">No messages yet. Start the conversation!</div>';
-
-            // Mark as active in list
             conversationList.querySelectorAll("li").forEach(li => li.classList.remove("active"));
             item.classList.add("active");
 
@@ -137,13 +203,11 @@ document.addEventListener("DOMContentLoaded", () => {
 
         clearTimeout(searchTimeout);
 
-        // When search is cleared, restore original list
         if (!q) {
             conversationList.innerHTML = originalConversations;
             return;
         }
 
-        // Wait 300ms before searching (debounce)
         searchTimeout = setTimeout(async () => {
             if (q.length < 2) return;
 
@@ -176,10 +240,18 @@ document.addEventListener("DOMContentLoaded", () => {
                     li.dataset.userid = user.id;
                     li.dataset.name = user.name;
 
-                    // Create avatar HTML
+                    const existingConversation = findExistingConversation(user.id);
+                    if (existingConversation) {
+                        li.dataset.id = existingConversation.id;
+                    }
+
                     const avatarHtml = user.profile_picture
                         ? `<img src="/assets/${user.profile_picture}" class="w-full h-full object-cover" alt="${user.name}">`
                         : `<span class="text-base font-bold text-white">${user.name.charAt(0).toUpperCase()}</span>`;
+
+                    const messagePreview = existingConversation
+                        ? (existingConversation.last_message ? existingConversation.last_message : "No messages yet")
+                        : "Click to start a conversation";
 
                     li.innerHTML = `
                         <div class="relative flex-shrink-0">
@@ -189,18 +261,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
                         <div class="flex-1 min-w-0">
                             <h3 class="text-sm font-semibold text-gray-900">${user.name}</h3>
-                            <p class="text-xs text-gray-500">Click to start a conversation</p>
+                            <p class="text-xs text-gray-500 truncate">${messagePreview}</p>
                         </div>
                     `;
 
-                    // Add click handler - just switch to user, don't create conversation
                     li.addEventListener("click", () => {
-                        // Clear search and restore with selected user
                         searchInput.value = "";
-                        conversationList.innerHTML = originalConversations;
-
-                        // Switch to this user (will prepare for new conversation)
                         switchConversation(li);
+
                     });
 
                     conversationList.appendChild(li);
@@ -220,6 +288,25 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }, 300);
     });
+
+    function findExistingConversation(userId) {
+        const originalListContainer = document.createElement('div');
+        originalListContainer.innerHTML = originalConversations;
+        const conversationItems = originalListContainer.querySelectorAll('li[data-userid]');
+
+        for (let item of conversationItems) {
+            if (item.dataset.userid === userId && item.dataset.id) {
+                const messageElement = item.querySelector('.flex-1.min-w-0 p:last-child');
+                const lastMessage = messageElement ? messageElement.textContent : "No messages yet";
+
+                return {
+                    id: item.dataset.id,
+                    last_message: lastMessage
+                };
+            }
+        }
+        return null;
+    }
 
     // Create conversation and send first message
     async function createConversationAndSendMessage(body) {
@@ -443,24 +530,20 @@ document.addEventListener("DOMContentLoaded", () => {
         if (convItem) {
             const messageContainer = convItem.querySelector(".flex-1.min-w-0");
             if (messageContainer) {
-                // Find the message preview (it's the last <p> element in the container)
                 const paragraphs = messageContainer.querySelectorAll("p");
                 let messagePreview = paragraphs[paragraphs.length - 1];
 
-                // Update message text
                 if (messagePreview) {
                     messagePreview.textContent = isMine ? `You: ${msg.body}` : msg.body;
-                    messagePreview.className = "text-xs text-gray-600 truncate"; // Maintain styling
+                    messagePreview.className = "text-xs text-gray-600 truncate";
                 }
 
-                // Update timestamp - find the span with text-gray-500 in the first div
                 const headerDiv = messageContainer.querySelector("div:first-child");
                 if (headerDiv) {
                     const timeSpan = headerDiv.querySelector("span.text-xs.text-gray-500");
                     if (timeSpan) {
                         timeSpan.textContent = "now";
                     } else {
-                        // If no timestamp exists, create one
                         const newTimeSpan = document.createElement("span");
                         newTimeSpan.className = "text-xs text-gray-500";
                         newTimeSpan.textContent = "now";
@@ -468,7 +551,6 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                 }
 
-                // Move conversation to top of list (common UX pattern)
                 if (conversationList.firstChild !== convItem) {
                     conversationList.insertBefore(convItem, conversationList.firstChild);
                 }

@@ -91,4 +91,15 @@ class ChatController extends Controller
 
         return response()->json($conversation);
     }
+
+    public function getUser($userId)
+    {
+        $user = User::with('userInfo')->findOrFail($userId);
+        
+        return response()->json([
+            'id' => $user->id,
+            'name' => $user->name,
+            'profile_picture' => $user->userInfo->profile_picture ?? null,
+        ]);
+    }
 }

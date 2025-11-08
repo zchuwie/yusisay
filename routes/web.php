@@ -38,6 +38,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/chat/{conversation}', [ChatController::class, 'show']);
     Route::post('/chat/message', [ChatController::class, 'sendMessage']);
     Route::post('/chat/start', [ChatController::class, 'startConversation']);
+    Route::get('/api/user/{userId}', [ChatController::class, 'getUser']);
 
     // Posts
     Route::get('/posts', [PostController::class, 'index'])->name('posts.index');

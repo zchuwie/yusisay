@@ -18,12 +18,24 @@ class MessageSent implements ShouldBroadcastNow
 
     public function __construct($message)
     {
-        $this->message = $message->load('sender');
+        $this->message = $message->load('sender', 'conversation');
     }
 
     public function broadcastOn()
     {
-        return new PrivateChannel('conversation.' . $this->message->conversation_id);
+        $channels = [
+            new PrivateChannel('conversation.' . $this->message->conversation_id),
+        ];
+
+        // Also broadcast to the receiver's personal channel for conversation list updates
+        $conversation = $this->message->conversation;
+        $receiverId = $this->message->sender_id === $conversation->user_one_id 
+            ? $conversation->user_two_id 
+            : $conversation->user_one_id;
+        
+        $channels[] = new PrivateChannel('user.' . $receiverId);
+
+        return $channels;
     }
 
     public function broadcastWith()
