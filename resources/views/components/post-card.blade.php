@@ -76,8 +76,7 @@
                             </button>
                         @endif
                     </div>
-
-                    {{-- DELETE MODAL --}}
+ 
                     <template x-teleport="body">
                         <div x-show="showDeleteModal" @click.self="showDeleteModal = false"
                             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
@@ -134,8 +133,7 @@
                             </div>
                         </div>
                     </template>
-
-                    {{-- REPORT MODAL --}}
+ 
                     <template x-teleport="body">
                         <div x-show="showReasonModal" @click.self="showReasonModal = false"
                             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"

@@ -481,7 +481,7 @@
                         }));
                         
                         console.log('Processed Reports:', this.reports); 
-                        console.log('Total Reports:', this.reports.length);  g
+                        console.log('Total Reports:', this.reports.length);
                         
                         this.totalReports = data.total || this.reports.length;
                         this.currentPage = data.current_page || 1;

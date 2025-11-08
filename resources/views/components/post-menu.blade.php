@@ -1,8 +1,7 @@
 @props(['post'])
 
 <div class="ml-[20px] mt-[2px] self-center relative" x-data="{ open: false, showReportModal: false, showDeleteModal: false, reason: '', isSubmitting: false, isDeleting: false }">
-
-    <!-- Dropdown button -->
+ 
     <button @click="open = !open" class="cursor-pointer">
         <svg xmlns="http://www.w3.org/2000/svg" width="4" height="18" viewBox="0 0 4 18" fill="none">
             <path d="M2 10C2.55 10 3 9.55 3 9C3 8.45 2.55 8 2 8C1.45 8 1 8.45 1 9C1 9.55 1.45 10 2 10Z" stroke="#6A6A6A"
@@ -13,8 +12,7 @@
                 stroke="#6A6A6A" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
     </button>
-
-    <!-- Dropdown menu -->
+ 
     <div x-show="open" @click.outside="open = false" x-transition
         class="absolute right-0 mt-2 w-32 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50">
         @if (Auth::check() && Auth::id() === $post->user_id)

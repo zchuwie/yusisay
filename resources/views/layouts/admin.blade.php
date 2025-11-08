@@ -18,8 +18,7 @@
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
-    <style>
-        /* Prevent FOUC (Flash of Unstyled Content) */
+    <style> 
         [x-cloak] {
             display: none !important;
         }
@@ -36,18 +35,15 @@
         .sidebar-scroll::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.5);
         }
-
-        /* Gradient background for sidebar */
+ 
         .sidebar-gradient {
             background: linear-gradient(180deg, #FF9013 0%, #e67e0f 100%);
         }
-
-        /* Smooth transitions */
+ 
         .sidebar-transition {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-
-        /* Improved hover states */
+ 
         .nav-item {
             position: relative;
             overflow: hidden;
@@ -82,15 +78,13 @@
         .nav-item-active::before {
             transform: translateX(0);
         }
-
-        /* Header shadow on scroll */
+ 
         .header-shadow {
             box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
         }
     </style>
 
-    <script>
-        // Initialize sidebar state BEFORE Alpine loads to prevent flicker
+    <script> 
         (function() {
             const sidebarState = localStorage.getItem('sidebarOpen');
             if (sidebarState === 'false') {
@@ -108,13 +102,11 @@
             localStorage.setItem('sidebarOpen', this.sidebarOpen);
         }
     }" x-cloak>
-
-        <!-- Sidebar -->
+ 
         <aside
             class="flex flex-col sidebar-gradient text-white shadow-2xl overflow-y-auto sidebar-scroll sidebar-transition z-30"
             :class="sidebarOpen ? 'w-64' : 'w-20'">
-
-            <!-- Logo Section -->
+ 
             <div
                 class="h-16 flex items-center justify-center p-4 bg-black bg-opacity-10 border-b border-white border-opacity-20">
                 <a href="{{ route('admin.dashboard') }}" class="block">
@@ -130,8 +122,7 @@
                     </h1>
                 </a>
             </div>
-
-            <!-- Navigation -->
+ 
             <nav class="flex-grow p-4 space-y-1">
                 <a href="{{ route('admin.dashboard') }}"
                     class="nav-item flex items-center p-3 text-sm font-medium rounded-lg sidebar-transition
@@ -159,8 +150,7 @@
                         :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0 hidden'">Content Moderation</span>
                 </a>
             </nav>
-
-            <!-- Logout Section -->
+ 
             <div class="p-4 border-t border-white border-opacity-20">
                 <form method="POST" action="{{ route('logout') }}" class="w-full">
                     @csrf
@@ -174,10 +164,8 @@
                 </form>
             </div>
         </aside>
-
-        <!-- Main Content Area -->
-        <div class="flex-1 flex flex-col overflow-hidden">
-            <!-- Header -->
+ 
+        <div class="flex-1 flex flex-col overflow-hidden"> 
             <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 header-shadow">
                 <div class="flex items-center space-x-4">
                     <button @click="toggleSidebar()"
@@ -193,15 +181,13 @@
                         </h1>
                     </div>
                 </div>
-
-                <!-- Admin Badge -->
+ 
                 <div class="flex items-center space-x-2 px-3 py-1.5 bg-orange-50 rounded-lg border border-orange-200">
                     <div class="w-2 h-2 bg-orange-500 rounded-full animate-pulse"></div>
                     <span class="text-sm font-semibold text-orange-700">Admin</span>
                 </div>
             </header>
-
-            <!-- Main Content -->
+ 
             <main class="flex-1 overflow-x-hidden overflow-y-auto bg-gray-50 p-6">
                 {{ $slot }}
             </main>
