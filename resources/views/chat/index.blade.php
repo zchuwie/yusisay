@@ -157,11 +157,13 @@
 
                             </div>
 
-                            <button id="sendBtn"
-                                class="bg-[#FF9013] hover:bg-[#e68010] text-white text-[14px] font-bold small p-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow"
-                                disabled title="Send">
-                                Send
-                            </button>
+                            <div x-data="{ submitting: false }">
+                                <button type="submit" x-ref="submitBtn" x-bind:disabled="submitting"
+                                    x-on:click="submitting = true"
+                                    class="flex items-center gap-2 text-white bg-[#FF9013] font-semibold rounded-xl text-sm px-6 py-3 shadow disabled:opacity-50 disabled:cursor-not-allowed transition">
+                                    Post Now
+                                </button>
+                            </div>
                         </div>
 
                     </div>

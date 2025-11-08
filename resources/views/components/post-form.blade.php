@@ -7,7 +7,9 @@
             </div>
         </div>
     </div>
-    <form method="POST" action="{{ route('posts.store') }}" @submit="open = false" class="p-5">
+
+    <form method="POST" action="{{ route('posts.store') }}" x-data="{ submitting: false }" @submit="submitting = true"
+        class="p-5">
         @csrf
 
         @if ($errors->has('content'))
@@ -29,14 +31,16 @@
                     class="relative w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-orange-500/20 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:w-5 after:h-5 after:transition-all peer-checked:bg-orange-500 shadow-inner">
                 </div>
                 <div class="ms-3">
-                    <span class="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">Post Anonymously</span>
+                    <span class="text-sm font-semibold text-gray-700 group-hover:text-gray-900 transition-colors">
+                        Post Anonymously
+                    </span>
                     <p class="text-[14px] text-gray-500">Your identity will be hidden</p>
                 </div>
             </label>
 
-            <button type="submit" x-ref="submitBtn"
-                class="flex items-center gap-2 text-white bg-[#FF9013] font-semibold rounded-xl text-sm px-6 py-3 shadow">
-                Post Now
+            <button type="submit" x-bind:disabled="submitting"
+                class="flex items-center gap-2 text-white bg-[#FF9013] hover:bg-[#e68010] font-semibold rounded-xl text-sm px-6 py-3 shadow transition disabled:opacity-50 disabled:cursor-not-allowed">
+                <span x-text="submitting ? 'Posting…' : 'Post Now'"></span>
             </button>
         </div>
     </form>

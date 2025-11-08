@@ -35,9 +35,9 @@
                     <span class="text-sm font-medium">{{ $commentsCount }}</span>
                 </a>
 
-                <div class="relative" x-data="{ open: false, showReasonModal: false, showDeleteModal: false, reason: '' }">
-                    <button @click="open = !open"
-                        class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors">
+                <div class="relative" x-data="{ open: false, showReasonModal: false, showDeleteModal: false, reason: '', isSubmitting: false }">
+                    <button @click="open = !open" :disabled="isSubmitting"
+                        class="p-1.5 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                         <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
                             <circle cx="12" cy="5" r="2" />
                             <circle cx="12" cy="12" r="2" />
@@ -77,6 +77,7 @@
                         @endif
                     </div>
 
+                    {{-- DELETE MODAL --}}
                     <template x-teleport="body">
                         <div x-show="showDeleteModal" @click.self="showDeleteModal = false"
                             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
@@ -104,17 +105,29 @@
                                     Are you sure you want to delete this post? This action cannot be undone.
                                 </p>
 
-                                <form action="{{ route('posts.destroy', $post->id) }}" method="POST">
+                                <form action="{{ route('posts.destroy', $post->id) }}" method="POST"
+                                    @submit.prevent="if (!isSubmitting) { isSubmitting = true; $el.submit(); }">
                                     @csrf
                                     @method('DELETE')
                                     <div class="flex gap-3">
-                                        <button type="button" @click="showDeleteModal = false"
-                                            class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                        <button type="button" @click="showDeleteModal = false" :disabled="isSubmitting"
+                                            class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                             Cancel
                                         </button>
-                                        <button type="submit"
-                                            class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors">
-                                            Delete
+                                        <button type="submit" :disabled="isSubmitting"
+                                            class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                            <span x-show="!isSubmitting">Delete</span>
+                                            <span x-show="isSubmitting" class="flex items-center gap-2">
+                                                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                    </path>
+                                                </svg>
+                                                Deleting...
+                                            </span>
                                         </button>
                                     </div>
                                 </form>
@@ -122,6 +135,7 @@
                         </div>
                     </template>
 
+                    {{-- REPORT MODAL --}}
                     <template x-teleport="body">
                         <div x-show="showReasonModal" @click.self="showReasonModal = false"
                             x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0"
@@ -146,22 +160,35 @@
                                     <h3 class="text-lg font-semibold text-gray-900">Report Post</h3>
                                 </div>
 
-                                <form action="{{ route('reports.store') }}" method="POST">
+                                <form action="{{ route('reports.store') }}" method="POST"
+                                    @submit.prevent="if (!isSubmitting) { isSubmitting = true; $el.submit(); }">
                                     @csrf
                                     <input type="hidden" name="post_id" value="{{ $postId }}">
 
-                                    <textarea name="reason" x-model="reason" rows="4"
-                                        class="w-full px-3 py-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 resize-none"
+                                    <textarea name="reason" x-model="reason" rows="4" :disabled="isSubmitting"
+                                        class="w-full px-3 py-2.5 text-sm text-gray-900 bg-gray-50 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-transparent mb-4 resize-none disabled:opacity-50 disabled:cursor-not-allowed"
                                         placeholder="Please describe why you're reporting this post..."></textarea>
 
                                     <div class="flex gap-3">
                                         <button type="button" @click="showReasonModal = false; reason = ''"
-                                            class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors">
+                                            :disabled="isSubmitting"
+                                            class="flex-1 px-4 py-2.5 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
                                             Cancel
                                         </button>
-                                        <button type="submit"
-                                            class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors">
-                                            Submit Report
+                                        <button type="submit" :disabled="isSubmitting"
+                                            class="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-orange-500 hover:bg-orange-600 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                                            <span x-show="!isSubmitting">Submit Report</span>
+                                            <span x-show="isSubmitting" class="flex items-center gap-2">
+                                                <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg"
+                                                    fill="none" viewBox="0 0 24 24">
+                                                    <circle class="opacity-25" cx="12" cy="12" r="10"
+                                                        stroke="currentColor" stroke-width="4"></circle>
+                                                    <path class="opacity-75" fill="currentColor"
+                                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                                    </path>
+                                                </svg>
+                                                Submitting...
+                                            </span>
                                         </button>
                                     </div>
                                 </form>
