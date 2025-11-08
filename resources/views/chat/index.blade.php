@@ -17,9 +17,9 @@
         <div class="fixed inset-0 flex items-center justify-center bg-gray-50 mt-[9vh]">
             <div
                 class="w-full max-w-7xl h-[78vh] bg-white rounded-lg shadow-lg overflow-hidden flex border border-gray-200">
-                <!-- Left Chat List -->
+  
                 <div class="w-80 bg-white flex flex-col border-r border-gray-200">
-                    <!-- Header -->
+                
                     <div class="p-5 border-b border-gray-200 bg-[#FF9013]">
                         <h2 class="text-xl font-bold text-white mb-1">Messages</h2>
                         <p class="text-white/90 text-[14px]">{{ count($conversations) }} conversations</p>
@@ -33,8 +33,7 @@
                             </svg>
                         </div>
                     </div>
-
-                    <!-- Conversation List -->
+ 
                     <div class="flex-1 overflow-y-auto" id="conversationListContainer">
                         <ul id="conversationList">
                             @foreach ($conversations as $conv)
@@ -50,7 +49,7 @@
 
                                 <li class="cursor-pointer py-4 px-5 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100"
                                     data-id="{{ $conv->id }}" data-name="{{ $otherUser->name }}">
-                                    <!-- Profile Picture -->
+                              
                                     <div class="relative flex-shrink-0">
                                         <div
                                             class="w-12 h-12 rounded-full overflow-hidden flex items-center justify-center bg-[#FF9013]">
@@ -62,14 +61,9 @@
                                                     {{ strtoupper(substr($otherUser->name, 0, 1)) }}
                                                 </span>
                                             @endif
-                                        </div>
-                                        <!-- Online indicator -->
-                                        <div
-                                            class="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white">
-                                        </div>
+                                        </div> 
                                     </div>
-
-                                    <!-- Conversation Info -->
+ 
                                     <div class="flex-1 min-w-0">
                                         <div class="flex items-center justify-between mb-1">
                                             <h3 class="text-sm font-semibold text-gray-900 truncate">
@@ -103,10 +97,8 @@
                         </ul>
                     </div>
                 </div>
-
-                <!-- Right Chat Area -->
-                <div class="flex-1 flex flex-col bg-white">
-                    <!-- Chat Header -->
+ 
+                <div class="flex-1 flex flex-col bg-white"> 
                     <div id="chatHeader"
                         class="border-b border-gray-200 p-5 bg-white flex items-center justify-between">
                         <div class="flex items-center gap-4">
@@ -119,10 +111,7 @@
                                             d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z">
                                         </path>
                                     </svg>
-                                </div>
-                                <div
-                                    class="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white">
-                                </div>
+                                </div> 
                             </div>
                             <div>
                                 <h3 id="chatUserName" class="text-base font-semibold text-gray-900">Select a
@@ -152,20 +141,17 @@
                             <span class="text-xs">typing...</span>
                         </div>
                     </div>
-
-                    <!-- Message Input -->
+ 
                     <div class="border-t border-gray-200 bg-white p-5">
                         <div class="flex items-center gap-3">
-
-                            <!-- Message Input Area -->
+ 
                             <div class="flex-1 relative flex items-center">
                                 <textarea id="messageInput" rows="1" placeholder="Type your message..."
                                     class="w-full bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 pr-12 focus:outline-none focus:border-[#FF9013] focus:ring-1 focus:ring-[#FF9013] resize-none max-h-32 transition-all"
                                     disabled></textarea>
 
                             </div>
-
-                            <!-- Send Button -->
+ 
                             <button id="sendBtn"
                                 class="bg-[#FF9013] hover:bg-[#e68010] text-white text-[14px] font-bold small p-3 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed shadow"
                                 disabled title="Send">
@@ -190,13 +176,11 @@
             const messageInput = document.getElementById('messageInput');
             const charCounter = document.getElementById('charCounter');
             const charCount = document.getElementById('charCount');
-
-            // Auto-resize textarea
+ 
             messageInput.addEventListener('input', function() {
                 this.style.height = 'auto';
                 this.style.height = (this.scrollHeight) + 'px';
-
-                // Update character counter
+ 
                 if (charCounter) {
                     charCount.textContent = this.value.length;
                     if (this.value.length > 0) {
@@ -206,8 +190,7 @@
                     }
                 }
             });
-
-            // Search functionality
+ 
             searchInput.addEventListener('input', async (e) => {
                 const query = e.target.value.trim();
 
