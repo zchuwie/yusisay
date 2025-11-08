@@ -257,6 +257,34 @@
                             <span class="text-sm font-medium text-gray-500">Total Reports:</span>
                             <span class="ml-2 text-sm font-bold text-red-600" x-text="modalReportData?.total_reports"></span>
                         </div>
+                        <div class="border-b pb-3">
+                            <span class="text-sm font-medium text-gray-500">Report Details:</span>
+                            <div x-show="modalReportData?.reporters && modalReportData.reporters.length > 0" class="mt-2">
+                                <div class="overflow-x-auto">
+                                    <table class="min-w-full divide-y divide-gray-200">
+                                        <thead class="bg-gray-50">
+                                            <tr>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reporter</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reason</th>
+                                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Reported At</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-gray-200">
+                                            <template x-for="reporter in modalReportData.reporters" :key="reporter.id">
+                                                <tr class="hover:bg-gray-50">
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-900" x-text="reporter.username"></td>
+                                                    <td class="px-4 py-2 text-sm text-gray-900" x-text="reporter.reason"></td>
+                                                    <td class="px-4 py-2 whitespace-nowrap text-sm text-gray-500" x-text="formatDate(reporter.created_at)"></td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div x-show="!modalReportData?.reporters || modalReportData.reporters.length === 0" class="mt-2">
+                                <p class="text-sm text-gray-500">No report details available</p>
+                            </div>
+                        </div>
                         <div x-show="modalReportData?.status && (modalReportData?.status === 'approved' || modalReportData?.status === 'dismissed')" class="border-b pb-3">
                             <span class="text-sm font-medium text-gray-500">Status:</span>
                             <template x-if="modalReportData?.status === 'approved'">
@@ -424,11 +452,15 @@
                         const params = new URLSearchParams({
                             page: this.currentPage,
                             per_page: this.perPage,
-                            search: this.searchQuery,
                             sort_by: this.sortColumn,
                             sort_dir: this.sortDirection,
                             resolved: this.showResolved ? '1' : '0'
                         });
+                        
+                        // Only add search parameter if searchQuery is not empty
+                        if (this.searchQuery.trim()) {
+                            params.append('search', this.searchQuery.trim());
+                        }
                         
                         const res = await fetch(`/admin/api/reports?${params.toString()}`);
                         
@@ -437,6 +469,8 @@
                         }
                         
                         const data = await res.json();
+                        
+                        // ... rest of the function remains the same
                         
                         console.log('API Response:', data); // Debug log
                         console.log('Show Resolved:', this.showResolved); // Debug log
