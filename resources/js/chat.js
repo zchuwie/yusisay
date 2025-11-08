@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentConversationId = null;
     let currentChatUserName = null;
     let currentChatUserAvatar = null;
-    let currentChatUserId = null; // Track the user we're chatting with
+    let currentChatUserId = null;  
     let originalConversations = null;
     const userId = window.Laravel.userId;
 
@@ -15,17 +15,14 @@ document.addEventListener("DOMContentLoaded", () => {
     const searchInput = document.getElementById("search");
 
     if (!conversationList) return;
-
-    // Save original conversations when page loads
+ 
     originalConversations = conversationList.innerHTML;
-
-    // Listen to user's personal channel for conversation list updates
+ 
     Echo.private(`user.${userId}`).listen("MessageSent", (e) => {
         console.log("Received message on user channel:", e);
         updateConversationList(e.message);
     });
-
-    // Update or create conversation in the list
+ 
     async function updateConversationList(message) {
         console.log("Updating conversation list with:", message);
 
@@ -44,8 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     messagePreview.className =
                         "text-xs text-gray-600 truncate recent-message";
                 }
-
-                // Update timestamp
+ 
                 const headerDiv =
                     messageContainer.querySelector("div:first-child");
                 if (headerDiv) {
@@ -72,8 +68,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 originalConversations = conversationList.innerHTML;
             }
-        } else {
-            // Create new conversation item
+        } else { 
             try {
                 const response = await fetch(`/api/user/${message.sender_id}`);
                 if (!response.ok) throw new Error("Failed to fetch user info");
@@ -115,8 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         }
     }
-
-    // Switch or start a conversation
+ 
     async function switchConversation(item) {
         if (!item) return;
 
@@ -221,15 +215,13 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log("Prepared new chat with user:", currentChatUserId);
         }
     }
-
-    // Handle conversation clicks
+ 
     conversationList.addEventListener("click", (e) => {
         const item = e.target.closest("li[data-id], li[data-userid]");
         if (!item) return;
         switchConversation(item);
     });
-
-    // Search users
+ 
     let searchTimeout;
     searchInput?.addEventListener("input", async (e) => {
         const q = e.target.value.trim();
@@ -307,19 +299,15 @@ document.addEventListener("DOMContentLoaded", () => {
                     </div>
                 `;
 
-                    li.addEventListener("click", () => {
-                        // Clear search and restore original list
+                    li.addEventListener("click", () => { 
                         searchInput.value = "";
                         conversationList.innerHTML = originalConversations;
-
-                        // Find the conversation item in the restored list by user ID
+ 
                         let targetItem = conversationList.querySelector(
                             `li[data-userid="${user.id}"]`
                         );
-
-                        // Only create new item if user doesn't exist at all in the list
-                        if (!targetItem) {
-                            // Create new conversation item for completely new chat
+ 
+                        if (!targetItem) { 
                             targetItem = document.createElement("li");
                             targetItem.className =
                                 "cursor-pointer py-4 px-5 hover:bg-gray-50 transition-colors flex items-start gap-3 border-b border-gray-100";
@@ -340,17 +328,14 @@ document.addEventListener("DOMContentLoaded", () => {
                                 <p class="text-xs text-gray-500 truncate recent-message">Click to start a conversation</p>
                             </div>
                         `;
-
-                            // Add to top of list
+ 
                             conversationList.insertBefore(
                                 targetItem,
                                 conversationList.firstChild
-                            );
-                            // Update saved state
+                            ); 
                             originalConversations = conversationList.innerHTML;
                         }
-
-                        // Switch to the conversation (existing or newly created)
+ 
                         if (targetItem) {
                             switchConversation(targetItem);
                         }
@@ -397,16 +382,14 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         return null;
     }
-
-    // Create conversation and send first message
+ 
     async function createConversationAndSendMessage(body) {
         if (!currentChatUserId) {
             console.error("No user selected to chat with");
             return null;
         }
 
-        try {
-            // Create conversation
+        try { 
             const convRes = await fetch("/chat/start", {
                 method: "POST",
                 headers: {
@@ -426,8 +409,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const conv = await convRes.json();
             currentConversationId = conv.id;
             console.log("Created new conversation:", currentConversationId);
-
-            // Send first message
+ 
             const msgRes = await fetch("/chat/message", {
                 method: "POST",
                 headers: {
@@ -448,26 +430,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
             const msg = await msgRes.json();
-
-            // Update the conversation list item
+ 
             const activeItem = conversationList.querySelector("li.active");
             if (activeItem) {
                 activeItem.dataset.id = currentConversationId;
-
-                // Add conversation to top of list if it's a new one from search
+ 
                 if (!activeItem.dataset.id) {
                     const newItem = activeItem.cloneNode(true);
                     newItem.dataset.id = currentConversationId;
                     conversationList.insertBefore(
                         newItem,
                         conversationList.firstChild
-                    );
-                    // Update saved state
+                    ); 
                     originalConversations = conversationList.innerHTML;
                 }
             }
-
-            // Setup real-time listener for the new conversation
+ 
             if (window.currentEchoChannel) {
                 window.currentEchoChannel.stopListening("MessageSent");
                 Echo.leave(`private-conversation.${currentConversationId}`);
@@ -489,16 +467,14 @@ document.addEventListener("DOMContentLoaded", () => {
             throw err;
         }
     }
-
-    // Send message
+ 
     sendBtn.addEventListener("click", async () => {
         const body = messageInput.value.trim();
         if (!body) {
             console.error("Cannot send empty message");
             return;
         }
-
-        // If no conversation exists yet, create one and send the first message
+ 
         if (!currentConversationId && currentChatUserId) {
             const messageCopy = body;
             messageInput.value = "";
@@ -519,8 +495,7 @@ document.addEventListener("DOMContentLoaded", () => {
             }
             return;
         }
-
-        // Existing conversation - normal message flow
+ 
         if (!currentConversationId) {
             console.error("No conversation selected");
             return;
@@ -560,16 +535,14 @@ document.addEventListener("DOMContentLoaded", () => {
             messageInput.focus();
         }
     });
-
-    // Send message on Enter
+ 
     messageInput.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
             e.preventDefault();
             sendBtn.click();
         }
     });
-
-    // Format message time
+ 
     function formatMessageTime(dateString) {
         const date = new Date(dateString);
         return date.toLocaleTimeString("en-US", {
@@ -643,8 +616,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const div = createMessageElement(msg, isMine);
         messagesDiv.appendChild(div);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-        // Update conversation list recent message
+ 
         const convItem = conversationList.querySelector(
             `li[data-id="${msg.conversation_id}"]`
         );

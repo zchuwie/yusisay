@@ -101,22 +101,19 @@ class AdminController extends Controller
         $now = Carbon::now();
         $weekAgo = $now->copy()->subDays(7);
         $twoWeeksAgo = $now->copy()->subDays(14);
-
-        // Total Users
+ 
         $totalUsers = User::count();
         $totalUsersLastWeek = User::where('created_at', '<', $weekAgo)->count();
         $totalUsersChange = $totalUsersLastWeek > 0 
             ? round((($totalUsers - $totalUsersLastWeek) / $totalUsersLastWeek) * 100, 1) 
             : ($totalUsers > 0 ? 100 : 0);
-
-        // New Users This Week
+ 
         $newUsersThisWeek = User::where('created_at', '>=', $weekAgo)->count();
         $newUsersPreviousWeek = User::whereBetween('created_at', [$twoWeeksAgo, $weekAgo])->count();
         $newUsersChange = $newUsersPreviousWeek > 0 
             ? round((($newUsersThisWeek - $newUsersPreviousWeek) / $newUsersPreviousWeek) * 100, 1) 
             : ($newUsersThisWeek > 0 ? 100 : 0);
-
-        // Active Reports (Pending)
+ 
         $activeReports = Report::where('status', 'pending')->count();
         $activeReportsLastWeek = Report::where('status', 'pending')
             ->where('created_at', '<', $weekAgo)
@@ -124,8 +121,7 @@ class AdminController extends Controller
         $activeReportsChange = $activeReportsLastWeek > 0 
             ? round((($activeReports - $activeReportsLastWeek) / $activeReportsLastWeek) * 100, 1) 
             : ($activeReports > 0 ? 100 : 0);
-
-        // Resolved Reports (Not Pending)
+ 
         $resolvedReports = Report::where('status', '!=', 'pending')->count();
         $resolvedReportsLastWeek = Report::where('status', '!=', 'pending')
             ->where('updated_at', '<', $weekAgo)
@@ -133,11 +129,9 @@ class AdminController extends Controller
         $resolvedReportsChange = $resolvedReportsLastWeek > 0 
             ? round((($resolvedReports - $resolvedReportsLastWeek) / $resolvedReportsLastWeek) * 100, 1) 
             : ($resolvedReports > 0 ? 100 : 0);
-
-        // Growth Data for Chart (Last 7 Days)
+ 
         $growthData = $this->getWeeklyGrowthData($weekAgo, $now);
-
-        // Recent Censored Words (Last 5)
+ 
         $recentCensoredWords = CensoredWord::orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
@@ -174,17 +168,14 @@ class AdminController extends Controller
         $labels = [];
         $users = [];
         $posts = [];
-
-        // Generate data for each day in the past week
+ 
         for ($i = 6; $i >= 0; $i--) {
             $date = $endDate->copy()->subDays($i);
             $labels[] = $date->format('M d');
-
-            // Count users created on this day
+ 
             $userCount = User::whereDate('created_at', $date->toDateString())->count();
             $users[] = $userCount;
-
-            // Count posts created on this day
+ 
             $postCount = Post::whereDate('created_at', $date->toDateString())->count();
             $posts[] = $postCount;
         }
@@ -208,17 +199,14 @@ class AdminController extends Controller
         $labels = [];
         $users = [];
         $posts = [];
-
-        // Generate data for every 3 days in the past month (to keep chart readable)
+ 
         for ($i = 30; $i >= 0; $i -= 3) {
             $date = $endDate->copy()->subDays($i);
             $labels[] = $date->format('M d');
-
-            // Count users created on this day
+ 
             $userCount = User::whereDate('created_at', $date->toDateString())->count();
             $users[] = $userCount;
-
-            // Count posts created on this day
+ 
             $postCount = Post::whereDate('created_at', $date->toDateString())->count();
             $posts[] = $postCount;
         }
@@ -242,19 +230,16 @@ class AdminController extends Controller
         $labels = [];
         $users = [];
         $posts = [];
-
-        // Generate data for each month in the past year
+ 
         for ($i = 11; $i >= 0; $i--) {
             $date = $endDate->copy()->subMonths($i);
             $labels[] = $date->format('M Y');
-
-            // Count users created in this month
+ 
             $userCount = User::whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
                 ->count();
             $users[] = $userCount;
-
-            // Count posts created in this month
+ 
             $postCount = Post::whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
                 ->count();

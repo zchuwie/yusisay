@@ -20,8 +20,7 @@
     </x-slot>
 
     <div x-data="usersTable()" x-init="init()" class="space-y-8 pb-6">
-
-        {{-- ✅ Toast --}}
+ 
         <div x-show="toast.show"
             x-cloak
             x-transition
@@ -36,8 +35,7 @@
                 <span x-text="toast.message"></span>
             </div>
         </div>
-
-        {{-- ✅ Search --}}
+ 
         <div class="flex items-center justify-end">
             <div class="relative w-full max-w-xs">
                 <input type="text" x-model.debounce.300ms="searchQuery"
@@ -47,8 +45,7 @@
                     class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
             </div>
         </div>
-
-        {{-- ✅ Loading & Error --}}
+ 
         <div x-show="loading" class="text-center py-12 text-indigo-600 font-semibold">
             <i data-lucide="loader-2" class="w-6 h-6 mr-2 inline-block animate-spin"></i> Loading users...
         </div>
@@ -62,8 +59,7 @@
             class="text-center py-12 text-gray-500 bg-white rounded-xl shadow-md">
             No user accounts found.
         </div>
-
-        {{-- ✅ Users Table --}}
+ 
         <div x-show="!loading && users.length > 0"
             class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-x-auto">
             <table class="min-w-full divide-y divide-gray-200">
@@ -115,8 +111,7 @@
                 </tbody>
             </table>
         </div>
-
-        {{-- ✅ Modal --}}
+ 
         <div x-show="isModalOpen" x-cloak
             class="fixed inset-0 z-50 flex items-center justify-center bg-gray-500 bg-opacity-70">
             <div class="bg-white p-6 rounded-lg shadow-xl w-full max-w-md">

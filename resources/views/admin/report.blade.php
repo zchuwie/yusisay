@@ -5,8 +5,7 @@
 
     <div x-data="moderationPanel()" x-init="init()" class="space-y-8 pb-6">
         <h1 class="text-3xl font-bold text-gray-800">Content Moderation Panel</h1>
-
-        <!-- Tab Navigation -->
+ 
         <div class="border-b border-gray-200">
             <nav class="-mb-px flex space-x-8">
                 <button @click="activeTab = 'reports'" 
@@ -25,8 +24,7 @@
                 </button>
             </nav>
         </div>
-
-        <!-- Toast Messages -->
+ 
         <div x-show="message" :class="{ 
             'bg-green-100 border-green-400 text-green-700': messageType === 'success',
             'bg-red-100 border-red-400 text-red-700': messageType === 'error'
@@ -40,11 +38,9 @@
         >
             <span x-text="message"></span>
         </div>
-
-        <!-- REPORTS TAB -->
+ 
         <div x-show="activeTab === 'reports'" class="space-y-6">
-
-            <!-- Search and Toggle -->
+ 
             <div class="flex items-center justify-between gap-4">
                 <div class="flex items-center gap-3">
                     <span class="text-sm font-medium text-gray-700">Show:</span>
@@ -61,8 +57,7 @@
                     <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"></i>
                 </div>
             </div>
-
-            <!-- Loading / Error / Empty -->
+ 
             <div x-show="loading" class="text-center py-12 text-red-600 font-semibold">
                 <i data-lucide="loader-2" class="w-6 h-6 mr-2 inline-block animate-spin"></i> Loading reports...
             </div>
@@ -74,8 +69,7 @@
                 <i data-lucide="inbox" class="w-12 h-12 mx-auto mb-3 text-gray-400"></i>
                 <p x-text="showResolved ? 'No resolved reports found.' : 'No reported content found.'"></p>
             </div>
-
-            <!-- Reports Table -->
+ 
             <div x-show="!loading && !error && reports.length > 0" class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-x-auto">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
@@ -154,8 +148,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- CENSORED WORDS TAB -->
+ 
         <div x-show="activeTab === 'censoredWords'" class="space-y-6">
             <div class="bg-white rounded-xl shadow-lg border border-gray-100 p-6">
                 <h3 class="text-lg font-semibold text-gray-900 mb-4 flex items-center">
@@ -172,8 +165,7 @@
                     </button>
                 </div>
             </div>
-
-            <!-- Words List -->
+ 
             <div class="bg-white rounded-xl shadow-lg border border-gray-100">
                 <div class="p-6 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900 flex items-center">
@@ -207,8 +199,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- Report Details Modal -->
+ 
         <div x-show="modalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div x-show="modalOpen" 
@@ -312,8 +303,7 @@
                 </div>
             </div>
         </div>
-
-        <!-- Delete Word Confirmation Modal -->
+ 
         <div x-show="deleteModalOpen" class="fixed inset-0 z-50 overflow-y-auto" style="display: none;">
             <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
                 <div x-show="deleteModalOpen"
@@ -456,8 +446,7 @@
                             sort_dir: this.sortDirection,
                             resolved: this.showResolved ? '1' : '0'
                         });
-                        
-                        // Only add search parameter if searchQuery is not empty
+                         
                         if (this.searchQuery.trim()) {
                             params.append('search', this.searchQuery.trim());
                         }
@@ -469,13 +458,11 @@
                         }
                         
                         const data = await res.json();
+                         
                         
-                        // ... rest of the function remains the same
-                        
-                        console.log('API Response:', data); // Debug log
-                        console.log('Show Resolved:', this.showResolved); // Debug log
-                        
-                        // Handle different response structures
+                        console.log('API Response:', data);  
+                        console.log('Show Resolved:', this.showResolved);  
+                          
                         let reportsData = [];
                         if (Array.isArray(data)) {
                             reportsData = data;
@@ -493,15 +480,15 @@
                             reviewed_at: r.reviewed_at || null
                         }));
                         
-                        console.log('Processed Reports:', this.reports); // Debug log
-                        console.log('Total Reports:', this.reports.length); // Debug log
+                        console.log('Processed Reports:', this.reports); 
+                        console.log('Total Reports:', this.reports.length);
                         
                         this.totalReports = data.total || this.reports.length;
                         this.currentPage = data.current_page || 1;
                         this.totalPages = data.last_page || Math.ceil(this.totalReports / this.perPage);
                         
                     } catch (e) {
-                        console.error('Fetch Reports Error:', e); // Debug log
+                        console.error('Fetch Reports Error:', e); 
                         this.error = `Failed to load reports. ${e.message}`;
                         this.reports = [];
                         this.totalReports = 0;
@@ -514,7 +501,7 @@
                 toggleResolved() {
                     this.showResolved = !this.showResolved;
                     this.currentPage = 1;
-                    this.searchQuery = ''; // Reset search when toggling
+                    this.searchQuery = '';  
                     this.fetchReports();
                     setTimeout(() => lucide.createIcons(), 100);
                 },
@@ -626,16 +613,14 @@
                         }
                         
                         const result = await res.json();
-                        
-                        // Update the post status in the local array
+                         
                         const post = this.reports.find(r => r.post_id === postId);
                         if (post) {
                             post.status = 'approved';
                         }
                         
                         this.showMessage(result.message || `Post ID ${postId} approved and hidden.`, 'success');
-                        
-                        // Optionally refresh the reports list
+                         
                         await this.fetchReports();
                         
                     } catch (e) {
@@ -665,16 +650,14 @@
                         }
                         
                         const result = await res.json();
-                        
-                        // Update the post status in the local array
+                         
                         const post = this.reports.find(r => r.post_id === postId);
                         if (post) {
                             post.status = 'declined';
                         }
                         
                         this.showMessage(result.message || `Reports for Post ID ${postId} declined.`, 'success');
-                        
-                        // Optionally refresh the reports list
+                         
                         await this.fetchReports();
                         
                     } catch (e) {
@@ -733,8 +716,7 @@
                 }
             };
         }
-
-        // Initialize lucide icons when page loads
+ 
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => lucide.createIcons(), 100);
         });

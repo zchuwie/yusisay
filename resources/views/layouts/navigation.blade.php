@@ -31,8 +31,7 @@
                     </h1>
                 </a>
             </div>
-
-            <!-- Navigation Links -->
+ 
             <div class="flex justify-center gap-6 flex-1">
 
                 <div class="relative py-3 px-6 cursor-pointer group transition-all rounded-xl duration-200
@@ -128,8 +127,7 @@
                     </div>
                 </div>
             </div>
-
-            <!-- User Dropdown -->
+ 
             <div class="flex items-center sm:ms-6">
                 <div class="hidden sm:flex">
                     <x-dropdown align="right" width="48">
@@ -178,8 +176,7 @@
             </div>
         </div>
     </div>
-
-    <!-- Mobile Menu -->
+ 
     <div :class="{ 'block': open, 'hidden': !open }" class="hidden sm:hidden bg-[#FAFAFA] border-t border-gray-200">
         <div class="pt-2 pb-3 space-y-1">
             <x-responsive-nav-link :href="route('posts.index')" :active="request()->routeIs('posts.index')">Posts</x-responsive-nav-link>

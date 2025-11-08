@@ -7,13 +7,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
     <title>Yusisay</title>
-
-    <!-- Fonts -->
+ 
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
-
-    <!-- Scripts -->
+    
+    <link rel="icon" type="image/x-icon" href="{{ asset('favicon.ico') }}?v=1">
+ 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
@@ -88,8 +88,7 @@
 </head>
 
 <body class="font-sans antialiased">
-    <div class="min-h-screen flex">
-        <!-- Left Side - Orange Gradient -->
+    <div class="min-h-screen flex"> 
         <div class="gradient-side hidden md:flex md:w-1/2 flex-col items-center justify-center p-12 relative">
             <div class="decorative-circle circle-1"></div>
             <div class="decorative-circle circle-2"></div>
@@ -100,11 +99,9 @@
                 <p class="text-white/80 text-lg">Connect, express, and be heard.</p> 
             </div>
         </div>
-
-        <!-- Right Side - Login Form -->
+ 
         <div class="w-full md:w-1/2 flex items-center justify-center p-6 bg-gray-50">
-            <div class="w-full max-w-md">
-                <!-- Mobile Logo -->
+            <div class="w-full max-w-md"> 
                 <div class="md:hidden text-center mb-8">
                     <h1 class="text-4xl font-bold bg-gradient-to-r from-[#FF9013] to-[#FF6B6B] bg-clip-text text-transparent"
                         style="font-family: 'Pacifico', cursive;">

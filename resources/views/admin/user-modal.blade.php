@@ -1,4 +1,3 @@
-{{-- MODAL STRUCTURE --}}
 <div x-show="isModalOpen" 
     x-cloak
     x-transition:enter="ease-out duration-300" 
@@ -10,11 +9,9 @@
     class="fixed inset-0 z-50 overflow-y-auto" 
     aria-labelledby="modal-title" role="dialog" aria-modal="true"
     >
-
-    {{-- Backdrop --}}
+ 
     <div class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity z-40" aria-hidden="true"></div>
-
-    {{-- Modal Panel Wrapper (Fixes: click-outside added to inner panel) --}}
+ 
     <div class="flex items-end justify-center min-h-full p-4 text-center sm:items-center sm:p-0 relative z-50">
         <div 
             x-transition:enter="ease-out duration-300" 
@@ -41,16 +38,14 @@
                             x-text="modalType === 'view' ? 'View User Details' : (modalType === 'edit' ? 'Edit User' : 'Confirm Deletion')">
                             Modal Title
                         </h3>
-
-                        {{-- VIEW MODE --}}
+ 
                         <div x-show="modalType === 'view'" class="mt-4 space-y-3 text-gray-600">
                             <p><strong>ID:</strong> <span x-text="selectedUser.id"></span></p>
                             <p><strong>Name:</strong> <span x-text="selectedUser.name"></span></p>
                             <p><strong>Email:</strong> <span x-text="selectedUser.email"></span></p>
                             <p><strong>Registered:</strong> <span x-text="formatDate(selectedUser.created_at)"></span></p>
                         </div>
-
-                        {{-- EDIT MODE --}}
+ 
                         <div x-show="modalType === 'edit'" class="mt-4 space-y-4">
                             <div>
                                 <label for="edit_name" class="block text-sm font-medium text-gray-700">Full Name</label>
@@ -67,8 +62,7 @@
                                 <p x-show="errors.email" x-text="errors.email?.[0]" class="mt-1 text-sm text-red-600"></p>
                             </div>
                         </div>
-
-                        {{-- DELETE CONFIRMATION MODE --}}
+ 
                         <div x-show="modalType === 'delete-confirm'" class="mt-4">
                             <p class="text-sm text-gray-600">
                                 Are you sure you want to delete the account for user 
@@ -79,37 +73,35 @@
                     </div>
                 </div>
             </div>
-
-            {{-- Modal Footer Buttons --}}
+ 
             <div x-show="selectedUser" class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                 <button x-show="modalType === 'edit'" type="button" 
                         @click="saveEdit()"
-                        :disabled="modalLoading" {{-- Correctly disabled here --}}
+                        :disabled="modalLoading" 
                         class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-indigo-600 text-base font-medium text-white hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 disabled:opacity-50">
-                    {{-- FIX: Use modalLoading to show the spinner --}}
+               
                     <span x-show="modalLoading" class="mr-2"><i data-lucide="loader-2" class="w-4 h-4 inline-block animate-spin action-icon"></i></span>
                     Save Changes
                 </button>
                 
                 <button x-show="modalType === 'delete-confirm'" type="button" 
                         @click="confirmDelete()"
-                        :disabled="modalLoading" {{-- Correctly disabled here --}}
+                        :disabled="modalLoading" 
                         class="w-full inline-flex justify-center rounded-lg border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 disabled:opacity-50">
-                    {{-- FIX: Use modalLoading to show the spinner --}}
+                    
                     <span x-show="modalLoading" class="mr-2"><i data-lucide="loader-2" class="w-4 h-4 inline-block animate-spin action-icon"></i></span>
                     Delete Permanently
                 </button>
 
                 <button type="button" @click="isModalOpen = false"
-                        :disabled="modalLoading" {{-- Added disabling during operation --}}
+                        :disabled="modalLoading" 
                         class="mt-3 w-full inline-flex justify-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm transition duration-150 disabled:opacity-50">
                     <span x-text="modalType === 'view' ? 'Close' : 'Cancel'">Cancel</span>
                 </button>
             </div>
         </div>
     </div>
-</div>
-{{-- END MODAL STRUCTURE --}}
+</div> 
 
 ---
 
