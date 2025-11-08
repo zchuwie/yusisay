@@ -5,12 +5,14 @@ namespace App\Http\Controllers;
 use App\Models\Post;
 use App\Models\Report;
 use App\Models\Comment;
-use App\Models\CensoredWord;  
+use App\Traits\ChecksCensoredWords;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
+    use ChecksCensoredWords;
+
     public function index()
     {
         $posts = Post::with(['user', 'comments.user'])
@@ -32,7 +34,7 @@ class PostController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->withErrors([
-                    'content' => 'Your post contains inappropriate content: "' . $censorCheck['word'] . '". Please remove it and try again.'
+                    'content' => 'Your post contains inappropriate content. Please remove it and try again.'
                 ]);
         }
 
@@ -44,47 +46,6 @@ class PostController extends Controller
 
         return redirect()->route('posts.index')
             ->with('success', 'Your post has been added successfully!');
-    }
- 
-    private function containsCensoredWord($content)
-    { 
-        $censoredWords = CensoredWord::pluck('word')->toArray();
- 
-        $normalizedContent = strtolower(trim($content));
-
-        foreach ($censoredWords as $censoredWord) { 
-            $normalizedCensoredWord = strtolower(trim($censoredWord));
- 
-            if (empty($normalizedCensoredWord)) {
-                continue;
-            }
- 
-            $pattern = $this->createFlexiblePattern($normalizedCensoredWord);
- 
-            if (preg_match($pattern, $normalizedContent)) {
-                return [
-                    'found' => true,
-                    'word' => $censoredWord
-                ];
-            }
-        }
-
-        return ['found' => false, 'word' => null];
-    }
- 
-    private function createFlexiblePattern($word)
-    { 
-        $chars = preg_split('//u', $word, -1, PREG_SPLIT_NO_EMPTY);
- 
-        $patternParts = [];
-        foreach ($chars as $char) { 
-            $escapedChar = preg_quote($char, '/'); 
-            $patternParts[] = $escapedChar . '+';
-        }
- 
-        $pattern = '/\b' . implode('', $patternParts) . '\b/u';
-
-        return $pattern;
     }
 
     public function history()

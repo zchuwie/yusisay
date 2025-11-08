@@ -66,7 +66,7 @@
             </div>
         @endif
 
-        <p class="block text-sm font-semibold text-gray-800 mb-4">
+        <p class="block text-[16px] font-semibold text-gray-800 mb-4">
             Your Feed
         </p>
         <div class="flex flex-col justify-start items-center">

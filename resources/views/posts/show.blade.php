@@ -9,14 +9,14 @@
 
     {{-- Font --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+    <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
 
     {{-- Vite --}}
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
         body {
-            font-family: 'Instrument Sans', sans-serif;
+            font-family: 'Figtree', sans-serif;
         }
 
         textarea::-webkit-scrollbar {
@@ -112,13 +112,24 @@
                     class="relative bg-[#fafafa] border border-[#dddddd] p-[20px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-2">
                     <div class="w-full flex flex-col justify-center gap-[10px]">
                         <div class="flex justify-between items-center w-full">
-                            <div class="flex justify-start items-center gap-[10px] w-full">
+                            <div class="flex items-center gap-3 flex-1">
                                 <x-user-avatar :user="$post->user" :isAnonymous="$post->is_anonymous" />
-                                <div class="text-[16px] text-[#454545] font-bold">
-                                    {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}
-                                </div>
-                                <div class="mt-[4px] text-[12px] text-[#8d8d8d]">
-                                    {{ $post->created_at->diffForHumans() }}
+
+                                <div class="flex flex-col">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-gray-900 text-sm">
+                                            {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}
+                                        </span>
+                                        @if ($isOwner)
+                                            <span
+                                                class="px-2 py-0.5 text-xs font-medium text-green-700 bg-green-50 rounded-full">
+                                                You
+                                            </span>
+                                        @endif
+                                    </div>
+                                    <span class="text-xs text-gray-500">
+                                        {{ $post->created_at->diffForHumans() }}
+                                    </span>
                                 </div>
                             </div>
                             <div class="flex justify-end items-center">
@@ -277,13 +288,18 @@
                     class="relative bg-[#fafafa] border border-[#dddddd] p-[20px] px-[37px] w-[700px] rounded-2xl flex flex-col items-center justify-center mb-2">
                     <div class="w-full flex flex-col justify-center gap-[10px]">
                         <div class="flex justify-between items-center w-full">
-                            <div class="flex justify-start items-center gap-[10px] w-full">
+                            <div class="flex items-center gap-3 flex-1">
                                 <x-user-avatar :user="$post->user" :isAnonymous="$post->is_anonymous" />
-                                <div class="text-[16px] text-[#454545] font-bold">
-                                    {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}
-                                </div>
-                                <div class="mt-[4px] text-[12px] text-[#8d8d8d]">
-                                    {{ $post->created_at->diffForHumans() }}
+
+                                <div class="flex flex-col">
+                                    <div class="flex items-center gap-2">
+                                        <span class="font-semibold text-gray-900 text-sm">
+                                            {{ $post->is_anonymous ? 'Anonymous' : $post->user->name }}
+                                        </span>
+                                    </div>
+                                    <span class="text-xs text-gray-500">
+                                        {{ $post->created_at->diffForHumans() }}
+                                    </span>
                                 </div>
                             </div>
                             <div class="flex justify-end items-center">
@@ -412,13 +428,28 @@
                         @forelse($post->comments as $comment)
                             <div class="w-full flex flex-col justify-center gap-[5px] mb-[32px] mt-[20px] pr-3">
                                 <div class="flex justify-between items-center w-full mb-1">
-                                    <div class="flex justify-start items-center gap-[10px] w-full">
+                                    {{-- <div class="flex justify-start items-center gap-[10px] w-full">
                                         <x-user-avatar :user="$comment->user" :isAnonymous="$comment->is_anonymous" />
                                         <div class="text-[16px] text-[#454545] font-bold">
                                             {{ $comment->is_anonymous ? 'Anonymous' : $comment->user->name }}
                                         </div>
                                         <div class="mt-[4px] text-[12px] text-[#8d8d8d]">
                                             {{ $comment->created_at->diffForHumans() }}
+                                        </div>
+                                    </div> --}}
+
+                                    <div class="flex items-center gap-3 flex-1">
+                                        <x-user-avatar :user="$comment->user" :isAnonymous="$comment->is_anonymous" />
+
+                                        <div class="flex flex-col">
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-semibold text-gray-900 text-sm">
+                                                    {{ $comment->is_anonymous ? 'Anonymous' : $comment->user->name }}
+                                                </span>
+                                            </div>
+                                            <span class="text-xs text-gray-500">
+                                                {{ $comment->created_at->diffForHumans() }}
+                                            </span>
                                         </div>
                                     </div>
 
@@ -493,7 +524,7 @@
                                 <p class="text-sm text-red-600 font-medium">{{ $errors->first('content') }}</p>
                             </div>
                         @endif
-                        
+
                         <form action="{{ route('comments.store') }}" method="POST" x-data="{ content: '', isAnonymous: false }"
                             id="commentForm" @submit.prevent="handleCommentSubmit($el)"
                             class="w-full h-[140px] rounded-[16px] bg-[#ededed] px-[16px] pt-[16px] mt-[16px] flex flex-col">
@@ -505,9 +536,6 @@
                                 class="mb-[5px] bg-transparent border-none outline-none resize-none w-full text-[16px] text-[#454545] h-full overflow-y-auto scrollbar-thin scrollbar-thumb-[#c0c0c0] scrollbar-track-[#f0f0f0] scrollbar-thumb-rounded-[4px] focus:outline-none focus:ring-0 focus:border-transparent"
                                 placeholder="What's your comment?"></textarea>
 
-                            @error('content')
-                                <p class="text-red-500 text-xs">{{ $message }}</p>
-                            @enderror
 
                             <div
                                 class="h-[40px] flex flex-row justify-between items-center pr-[10px] mt-[2px] mb-[10px] pb-2">
