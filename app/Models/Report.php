@@ -9,6 +9,10 @@ class Report extends Model
 {
     use HasFactory;
 
+    const STATUS_PENDING = 'pending';
+    const STATUS_APPROVED = 'approved';
+    const STATUS_DISMISSED = 'dismissed';
+
     protected $fillable = [
         'post_id',
         'user_id',
