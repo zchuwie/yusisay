@@ -4,6 +4,7 @@ document.addEventListener("DOMContentLoaded", () => {
     let currentConversationId = null;
     let currentChatUserName = null;
     let currentChatUserAvatar = null;
+    let currentChatUserId = null; // Track the user we're chatting with
     let originalConversations = null;
     const userId = window.Laravel.userId;
 
@@ -36,76 +37,90 @@ document.addEventListener("DOMContentLoaded", () => {
             window.currentEchoChannel = null;
         }
 
-        // Create conversation if it doesn't exist
-        if (!newConversationId && userIdToChat) {
-            try {
-                const res = await fetch("/chat/start", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json",
-                        "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                    },
-                    body: JSON.stringify({ user_id: userIdToChat }),
-                });
+        // If we have an existing conversation, use it
+        if (newConversationId) {
+            currentConversationId = newConversationId;
+            currentChatUserName = item.dataset.name;
+            currentChatUserId = userIdToChat;
 
+            // Load avatar
+            const avatarElement = item.querySelector(".w-12.h-12, .w-8.h-8, .w-11.h-11");
+            currentChatUserAvatar = avatarElement ? avatarElement.outerHTML : null;
+
+            // Update chat header
+            chatUserName.textContent = currentChatUserName;
+            if (currentChatUserAvatar) {
+                chatUserAvatar.innerHTML = currentChatUserAvatar;
+            }
+
+            // Update status text
+            const statusElement = document.getElementById("chatUserStatus");
+            if (statusElement) {
+                statusElement.textContent = "Active now";
+            }
+
+            // Enable input
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+            messagesDiv.innerHTML = '<div class="text-center text-gray-400 py-8">Loading messages...</div>';
+
+            // Mark as active in list
+            conversationList.querySelectorAll("li").forEach(li => li.classList.remove("active"));
+            item.classList.add("active");
+
+            try {
+                const res = await fetch(`/chat/${currentConversationId}`);
                 if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
-                const conv = await res.json();
-                newConversationId = conv.id;
-                item.dataset.id = newConversationId;
-                console.log("Created new conversation:", newConversationId);
+                const data = await res.json();
+                renderMessages(data.messages || []);
             } catch (err) {
-                console.error("Failed to create conversation:", err);
+                messagesDiv.innerHTML = '<div class="text-center text-red-500 py-8">Failed to load messages</div>';
+                console.error("Failed to load messages:", err);
                 return;
             }
+
+            // Setup real-time listener
+            window.currentEchoChannel = Echo.private(`conversation.${currentConversationId}`)
+                .listen("MessageSent", (e) => {
+                    if (e.message.sender_id === userId) return;
+                    appendMessage(e.message, false);
+                });
+        } else if (userIdToChat) {
+            // No conversation yet, just prepare the UI for a new chat
+            currentConversationId = null;
+            currentChatUserName = item.dataset.name;
+            currentChatUserId = userIdToChat;
+
+            // Load avatar
+            const avatarElement = item.querySelector(".w-12.h-12, .w-8.h-8, .w-11.h-11");
+            currentChatUserAvatar = avatarElement ? avatarElement.outerHTML : null;
+
+            // Update chat header
+            chatUserName.textContent = currentChatUserName;
+            if (currentChatUserAvatar) {
+                chatUserAvatar.innerHTML = currentChatUserAvatar;
+            }
+
+            // Update status text
+            const statusElement = document.getElementById("chatUserStatus");
+            if (statusElement) {
+                statusElement.textContent = "Active now";
+            }
+
+            // Enable input for new conversation
+            messageInput.disabled = false;
+            sendBtn.disabled = false;
+
+            // Clear messages and show placeholder
+            messagesDiv.innerHTML = '<div class="text-center text-gray-400 py-8">No messages yet. Start the conversation!</div>';
+
+            // Mark as active in list
+            conversationList.querySelectorAll("li").forEach(li => li.classList.remove("active"));
+            item.classList.add("active");
+
+            console.log("Prepared new chat with user:", currentChatUserId);
         }
-
-        currentConversationId = newConversationId;
-        currentChatUserName = item.dataset.name;
-
-        // Load avatar
-        const avatarElement = item.querySelector(".w-12.h-12, .w-8.h-8, .w-11.h-11");
-        currentChatUserAvatar = avatarElement ? avatarElement.outerHTML : null;
-
-        // Update chat header
-        chatUserName.textContent = currentChatUserName;
-        if (currentChatUserAvatar) {
-            chatUserAvatar.innerHTML = currentChatUserAvatar;
-        }
-
-        // Update status text
-        const statusElement = document.getElementById("chatUserStatus");
-        if (statusElement) {
-            statusElement.textContent = "Active now";
-        }
-
-        // Enable input
-        messageInput.disabled = false;
-        sendBtn.disabled = false;
-        messagesDiv.innerHTML = '<div class="text-center text-gray-400 py-8">Loading messages...</div>';
-
-        // Mark as active in list
-        conversationList.querySelectorAll("li").forEach(li => li.classList.remove("active"));
-        item.classList.add("active");
-
-        try {
-            const res = await fetch(`/chat/${currentConversationId}`);
-            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-            const data = await res.json();
-            renderMessages(data.messages || []);
-        } catch (err) {
-            messagesDiv.innerHTML = '<div class="text-center text-red-500 py-8">Failed to load messages</div>';
-            console.error("Failed to load messages:", err);
-            return;
-        }
-
-        // Setup real-time listener
-        window.currentEchoChannel = Echo.private(`conversation.${currentConversationId}`)
-            .listen("MessageSent", (e) => {
-                if (e.message.sender_id === userId) return;
-                appendMessage(e.message, false);
-            });
     }
 
     // Handle conversation clicks
@@ -115,7 +130,7 @@ document.addEventListener("DOMContentLoaded", () => {
         switchConversation(item);
     });
 
-    // Search users - ONLY ONE IMPLEMENTATION
+    // Search users
     let searchTimeout;
     searchInput?.addEventListener("input", async (e) => {
         const q = e.target.value.trim();
@@ -178,40 +193,14 @@ document.addEventListener("DOMContentLoaded", () => {
                         </div>
                     `;
 
-                    // Add click handler
-                    li.addEventListener("click", async () => {
-                        try {
-                            const res = await fetch("/chat/start", {
-                                method: "POST",
-                                headers: {
-                                    "Content-Type": "application/json",
-                                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
-                                },
-                                body: JSON.stringify({ user_id: user.id }),
-                            });
+                    // Add click handler - just switch to user, don't create conversation
+                    li.addEventListener("click", () => {
+                        // Clear search and restore with selected user
+                        searchInput.value = "";
+                        conversationList.innerHTML = originalConversations;
 
-                            if (!res.ok) throw new Error(`HTTP ${res.status}`);
-
-                            const conv = await res.json();
-                            li.dataset.id = conv.id;
-
-                            // Clear search and restore with new conversation
-                            searchInput.value = "";
-                            conversationList.innerHTML = originalConversations;
-
-                            // Add new conversation to top of list
-                            const newLi = li.cloneNode(true);
-                            newLi.dataset.id = conv.id;
-                            conversationList.insertBefore(newLi, conversationList.firstChild);
-
-                            // Update saved state
-                            originalConversations = conversationList.innerHTML;
-
-                            // Switch to new conversation
-                            switchConversation(newLi);
-                        } catch (err) {
-                            console.error("Failed to start conversation:", err);
-                        }
+                        // Switch to this user (will prepare for new conversation)
+                        switchConversation(li);
                     });
 
                     conversationList.appendChild(li);
@@ -232,11 +221,115 @@ document.addEventListener("DOMContentLoaded", () => {
         }, 300);
     });
 
+    // Create conversation and send first message
+    async function createConversationAndSendMessage(body) {
+        if (!currentChatUserId) {
+            console.error("No user selected to chat with");
+            return null;
+        }
+
+        try {
+            // Create conversation
+            const convRes = await fetch("/chat/start", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify({ user_id: currentChatUserId }),
+            });
+
+            if (!convRes.ok) throw new Error(`HTTP ${convRes.status} - Failed to create conversation`);
+
+            const conv = await convRes.json();
+            currentConversationId = conv.id;
+            console.log("Created new conversation:", currentConversationId);
+
+            // Send first message
+            const msgRes = await fetch("/chat/message", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').content,
+                },
+                body: JSON.stringify({
+                    conversation_id: currentConversationId,
+                    body: body
+                }),
+            });
+
+            if (!msgRes.ok) throw new Error(`HTTP ${msgRes.status} - Failed to send message`);
+
+            const msg = await msgRes.json();
+
+            // Update the conversation list item
+            const activeItem = conversationList.querySelector("li.active");
+            if (activeItem) {
+                activeItem.dataset.id = currentConversationId;
+
+                // Add conversation to top of list if it's a new one from search
+                if (!activeItem.dataset.id) {
+                    const newItem = activeItem.cloneNode(true);
+                    newItem.dataset.id = currentConversationId;
+                    conversationList.insertBefore(newItem, conversationList.firstChild);
+                    // Update saved state
+                    originalConversations = conversationList.innerHTML;
+                }
+            }
+
+            // Setup real-time listener for the new conversation
+            if (window.currentEchoChannel) {
+                window.currentEchoChannel.stopListening("MessageSent");
+                Echo.leave(`private-conversation.${currentConversationId}`);
+            }
+
+            window.currentEchoChannel = Echo.private(`conversation.${currentConversationId}`)
+                .listen("MessageSent", (e) => {
+                    if (e.message.sender_id === userId) return;
+                    appendMessage(e.message, false);
+                });
+
+            return msg;
+
+        } catch (err) {
+            console.error("Failed to create conversation and send message:", err);
+            throw err;
+        }
+    }
+
     // Send message
     sendBtn.addEventListener("click", async () => {
         const body = messageInput.value.trim();
-        if (!body || !currentConversationId) {
-            console.error("Cannot send message:", { body, currentConversationId });
+        if (!body) {
+            console.error("Cannot send empty message");
+            return;
+        }
+
+        // If no conversation exists yet, create one and send the first message
+        if (!currentConversationId && currentChatUserId) {
+            const messageCopy = body;
+            messageInput.value = "";
+            messageInput.style.height = 'auto';
+            messageInput.disabled = true;
+            sendBtn.disabled = true;
+
+            try {
+                const msg = await createConversationAndSendMessage(messageCopy);
+                appendMessage(msg, true);
+            } catch (err) {
+                messageInput.value = messageCopy;
+                console.error("Failed to send first message:", err);
+            } finally {
+                messageInput.disabled = false;
+                sendBtn.disabled = false;
+                messageInput.focus();
+            }
+            return;
+        }
+
+        // Existing conversation - normal message flow
+        if (!currentConversationId) {
+            console.error("No conversation selected");
             return;
         }
 
@@ -350,36 +443,36 @@ document.addEventListener("DOMContentLoaded", () => {
         if (convItem) {
             const messageContainer = convItem.querySelector(".flex-1.min-w-0");
             if (messageContainer) {
-            // Find the message preview (it's the last <p> element in the container)
-            const paragraphs = messageContainer.querySelectorAll("p");
-            let messagePreview = paragraphs[paragraphs.length - 1];
+                // Find the message preview (it's the last <p> element in the container)
+                const paragraphs = messageContainer.querySelectorAll("p");
+                let messagePreview = paragraphs[paragraphs.length - 1];
 
-            // Update message text
-            if (messagePreview) {
-                messagePreview.textContent = isMine ? `You: ${msg.body}` : msg.body;
-                messagePreview.className = "text-xs text-gray-600 truncate"; // Maintain styling
-            }
+                // Update message text
+                if (messagePreview) {
+                    messagePreview.textContent = isMine ? `You: ${msg.body}` : msg.body;
+                    messagePreview.className = "text-xs text-gray-600 truncate"; // Maintain styling
+                }
 
-            // Update timestamp - find the span with text-gray-500 in the first div
-            const headerDiv = messageContainer.querySelector("div:first-child");
-            if (headerDiv) {
-                const timeSpan = headerDiv.querySelector("span.text-xs.text-gray-500");
-                if (timeSpan) {
-                timeSpan.textContent = "now";
-                } else {
-                // If no timestamp exists, create one
-                const newTimeSpan = document.createElement("span");
-                newTimeSpan.className = "text-xs text-gray-500";
-                newTimeSpan.textContent = "now";
-                headerDiv.appendChild(newTimeSpan);
+                // Update timestamp - find the span with text-gray-500 in the first div
+                const headerDiv = messageContainer.querySelector("div:first-child");
+                if (headerDiv) {
+                    const timeSpan = headerDiv.querySelector("span.text-xs.text-gray-500");
+                    if (timeSpan) {
+                        timeSpan.textContent = "now";
+                    } else {
+                        // If no timestamp exists, create one
+                        const newTimeSpan = document.createElement("span");
+                        newTimeSpan.className = "text-xs text-gray-500";
+                        newTimeSpan.textContent = "now";
+                        headerDiv.appendChild(newTimeSpan);
+                    }
+                }
+
+                // Move conversation to top of list (common UX pattern)
+                if (conversationList.firstChild !== convItem) {
+                    conversationList.insertBefore(convItem, conversationList.firstChild);
                 }
             }
-
-            // Move conversation to top of list (common UX pattern)
-            if (conversationList.firstChild !== convItem) {
-                conversationList.insertBefore(convItem, conversationList.firstChild);
-            }
-            }
         }
-        }
+    }
 });
