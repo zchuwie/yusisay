@@ -8,7 +8,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const conversationList = document.getElementById("conversationList");
     const messageInput = document.getElementById("messageInput");
-    const sendBtn = document.getElementById("sendBtn");
+    const sendBtn = document.getElementById("submitBtn");
     const messagesDiv = document.getElementById("messages");
     const chatUserName = document.getElementById("chatUserName");
     const chatUserAvatar = document.getElementById("chatUserAvatar");

@@ -154,10 +154,10 @@
                             </div>
 
                             <div x-data="{ submitting: false }">
-                                <button type="submit" x-ref="submitBtn" x-bind:disabled="submitting"
+                                <button type="submit" id="submitBtn" x-ref="submitBtn" x-bind:disabled="submitting"
                                     x-on:click="submitting = true"
                                     class="flex items-center gap-2 text-white bg-[#FF9013] font-semibold rounded-xl text-sm px-6 py-3 shadow disabled:opacity-50 disabled:cursor-not-allowed transition">
-                                    Post Now
+                                    Send
                                 </button>
                             </div>
                         </div>
